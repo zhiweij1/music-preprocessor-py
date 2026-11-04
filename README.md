@@ -1,9 +1,13 @@
-# music-preprocessor (Python edition)
+# music-preprocessor
 
 简谱 DSL → **LilyPond** / **MusicXML** / **MuseScore 4**（`.mscz` / `.pdf` / `.png`）。
 
-C++ 版的功能等价移植（lexer / parser / IR / LilyPond 后端保持一致），新增 MusicXML 后端和
-MuseScore 调用，用来在 Windows（只有 MuseScore、没有 LilyPond）上出 lead sheet。
+把简谱写成一个纯文本 DSL，一条命令生成谱子：
+
+- 想要可编辑的工程文件 → `.mscz`（MuseScore 4 直接打开）
+- 想要打印 → `.pdf`
+- 想要自己排或给别的软件 → `.musicxml`
+- 想走 LilyPond → `.ly`
 
 📖 **简谱 DSL 语法参考：[docs/DSL.md](docs/DSL.md)**（速查卡 + 完整记号表 + 示例）
 
@@ -14,12 +18,12 @@ MuseScore 调用，用来在 Windows（只有 MuseScore、没有 LilyPond）上�
 | Python 3.9+ | 必填 |
 | MuseScore 4 | 仅 `-f mscz/pdf/png` 需要；自动在 `C:\Program Files\MuseScore 4\bin\MuseScore4.exe` 等位置查找 |
 
-没有 MuseScore 时，仍然可以输出 `.ly` 和 `.musicxml`（MuseScore 手工打开也行）。
+没有 MuseScore 时，仍然可以输出 `.ly` 和 `.musicxml`（用 MuseScore 手工打开也行）。
 
 ## 用法
 
 ```bash
-# 1) 输出 LilyPond（默认，保持旧行为：无 -o 时打到 stdout）
+# 1) 输出 LilyPond（默认格式；不带 -o 时打到 stdout）
 python mpp.py song.dsl
 python mpp.py song.dsl -o song.ly
 
@@ -32,7 +36,7 @@ python mpp.py song.dsl -f pdf
 python mpp.py song.dsl -f mscz,pdf --keep-xml
 ```
 
-Windows 上也可以直接双击/命令行用 `mpp.cmd`：
+Windows 上也可以直接用 `mpp.cmd`：
 
 ```bat
 mpp.cmd song.dsl -f mscz
@@ -68,18 +72,26 @@ L: twin-kle twin-kle
 0 是休止，x 也是休止；q/s/d/c/h 是时值前缀；' 高八度、, 低八度；#/b 升降；~ 连音线；( ) 圆滑线
 ```
 
-## 与 C++ 版的差异
+## 版式
+
+谱面样式在 `assets/jazz-lead-sheet.mss`（来自 MuseScore 的 Jazz Lead Sheet 模板），常用项：
+
+| 样式项 | 当前值 | 作用 |
+|---|---|---|
+| `chordSymbolAFontSize` / `BFontSize` | 12 / 10 | 和弦符号字号 |
+| `chordSymbolAFontStyle` / `BFontStyle` | 0 / 0 | 0 = 不加粗 |
+| `lyricsOddFontSize` / `Even` | 12 | 歌词字号 |
+| `chordSymbolPosAbove` | y = -2.5 | 和弦离五线谱的高度 |
+
+## 行为说明
 
 | 项 | 说明 |
 |---|---|
-| LilyPond 输出 | 结构、空白与 C++ 版基本一致（和弦 `g4:7`、`\partial` 等） |
-| **八度修正** | C++ 版在非 C 调时 4–7 级会低一个八度（Bb 调 `1 2 3 4` = Bb4 C4 D4 Eb4）；Python 版已修正为 Bb4 C5 D5 Eb5 |
-| `(2` / `2)` 贴写圆滑线 | Python 版额外支持把括号贴在音符上（`5 2 ~ q2`、`(2 q2)`），C++ 版只认空格分开的 `(` `)` |
-| `\|\|` 双小节线 | Python 版支持（`\|\|` 渲染成 double bar；也支持 `\|.` `.\|`），C++ 版当错误 |
-| `LP:` 块 | MusicXML 后端没有对应概念 → 忽略；LilyPond 后端原样保留 |
-| `\命令` / `^"文字"` | MusicXML 后端只映射 `\break`、`\bar "…"`、`^"…"`/`_"…"`，其余给 warning；LilyPond 后端原样保留 |
+| `LP: … :LP` 原样 LilyPond | 只对 `.ly` 输出有效；转 MusicXML 时忽略并给 warning |
+| `\命令` / `^"文字"` | MusicXML 只映射 `\break`、`\bar "…"`、`^"…"` / `_"…"`，其余给 warning；`.ly` 原样保留 |
 | 和弦写法 | 交给 MuseScore 解析；`C6/9` 会正确保留，`G7sus4` 会被规范成 `G7sus⁴` |
-| 反复 `R{}` / `A{}` | 仍然报 “Phase 2” 错误（与 C++ 版一致） |
+| 反复 `R{}` / `A{}` | 暂不支持，会报错 |
+| 歌词位置 | 写在某行音乐下面 → 从那一行第一个音开始；详见 DSL 文档第 7 节 |
 
 ## 目录结构
 
@@ -90,12 +102,15 @@ music-preprocessor-py/
 │   ├── lexer.py           # 词法
 │   ├── parser.py          # 语法 → IR
 │   ├── ir.py              # IR 数据结构
+│   ├── lyrics.py          # 歌词分行、分句、对齐
 │   ├── lilypond.py        # LilyPond 后端
 │   ├── musicxml.py        # MusicXML 后端（lead sheet）
 │   ├── musescore.py       # MuseScore CLI 调用
 │   └── cli.py             # 命令行
-├── assets/jazz-lead-sheet.mss   # 从 MuseScore 模板复制的样式
-└── tests/                 # 21 个用例 + 19 个 demo 作为 fixtures
+├── assets/jazz-lead-sheet.mss   # 谱面样式
+├── docs/DSL.md            # 语法文档
+├── examples/              # 示例谱
+└── tests/                 # 28 个用例 + 19 个 demo 作为 fixtures
 ```
 
 ## 测试

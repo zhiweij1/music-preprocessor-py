@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Tokenizer for the 简谱 DSL (behaviour-compatible with the C++ original)."""
+"""Tokenizer for the 简谱 DSL."""
 from dataclasses import dataclass, field
 from enum import Enum, auto
 import re

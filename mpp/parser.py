@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Recursive-descent parser: tokens -> Score IR (port of the C++ Parser)."""
+"""Recursive-descent parser: tokens -> Score IR."""
 from .ir import LyricsLine, Measure, Note, Score
 from .lexer import T, Token
 
@@ -96,7 +96,7 @@ class Parser:
                 flush()
             elif tok.type in (T.REPEAT_BEGIN, T.REPEAT_END, T.ALT_BEGIN):
                 raise DslError(
-                    f"Line {tok.line}: repeat/alternate notation not yet supported (Phase 2)")
+                    f"Line {tok.line}: repeat/alternate notation not supported yet")
             elif tok.type in (T.LYRIC_HANZI, T.LYRIC_LATIN):
                 self.advance()
                 inline = (tok.line == self.last_lyric_line)

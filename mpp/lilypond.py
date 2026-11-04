@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""LilyPond backend — behaviour-compatible port of the C++ Codegen."""
+"""LilyPond backend."""
 from .ir import Note, Score
 
 MINOR_TO_MAJOR = {

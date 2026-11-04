@@ -1,6 +1,6 @@
 # 简谱 DSL 语法参考
 
-> 适用于 `music-preprocessor-py`（与 C++ 版语法一致）。
+> 适用于 `music-preprocessor-py` 工具。
 > 一句话：**用空格分隔的简谱记号 + 若干 `Xxx:` 声明**，`|` 分小节，一行写完一首也行。
 
 ## 速查卡
@@ -317,7 +317,7 @@ LP:
 
 | 写法 | 现状 |
 |---|---|
-| `R{ … }` 反复 | 报错：`repeat/alternate notation not yet supported (Phase 2)` |
+| `R{ … }` 反复 | 报错：`repeat/alternate notation not supported yet` |
 | `A{ … }` 跳房子 | 同上 |
 | `-` 前面没有音 | 报错：`'-' dash must follow a note` |
 | `~` `(` `)` 前面没有音 | 报错 |
