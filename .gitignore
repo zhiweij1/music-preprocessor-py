@@ -1,5 +1,6 @@
 # 生成物（随时可以重新生成）
 *.png
+!docs/screenshot.png
 *.pdf
 *.mscz
 *.mscx

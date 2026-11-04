@@ -137,10 +137,11 @@ def main(argv=None) -> int:
                 if os.path.abspath(out) != os.path.abspath(xml_path):
                     with open(out, "w", encoding="utf-8") as fh:
                         fh.write(xml_text)
+                print(f"Wrote {out}")
             else:
                 out = args.output or f"{stem}.{fmt}"
-                musescore.convert(xml_path, out, exe, style)
-            print(f"Wrote {out}")
+                for created in musescore.convert(xml_path, out, exe, style):
+                    print(f"Wrote {created}")
         if args.keep_xml and not temp_xml:
             print(f"Wrote {xml_path}")
     except (OSError, RuntimeError) as exc:

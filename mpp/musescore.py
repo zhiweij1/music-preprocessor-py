@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """Locate and drive the MuseScore 4 command line to export .mscz/.pdf/.png."""
+import glob
 import os
 import shutil
 import subprocess
@@ -34,7 +35,11 @@ def find(explicit: str = None) -> str:
 
 def convert(xml_path: str, out_path: str, exe: str, style: str = None,
             timeout: int = 180):
-    """Run `MuseScore4 -o out in`, optionally applying a style file."""
+    """Run `MuseScore4 -o out in`, optionally applying a style file.
+
+    Page-based formats (png/svg) are written as `<name>-1.png`, `<name>-2.png`…
+    Returns the list of files actually created.
+    """
     if not exe:
         raise RuntimeError("MuseScore executable not found")
     args = [exe, "-f"]
@@ -42,17 +47,23 @@ def convert(xml_path: str, out_path: str, exe: str, style: str = None,
         args += ["-S", style]
     args += ["-o", out_path, xml_path]
     proc = subprocess.run(args, capture_output=True, timeout=timeout)
-    if proc.returncode != 0 or not os.path.exists(out_path):
+
+    created = []
+    if os.path.exists(out_path):
+        created = [out_path]
+    else:
+        base, ext = os.path.splitext(out_path)
+        created = sorted(glob.glob(f"{base}-*{ext}"))
+    if proc.returncode != 0 or not created:
         err = (proc.stderr or b"").decode("utf-8", "replace").strip()
         err = "\n".join(line for line in err.splitlines() if "log file" not in line)
         raise RuntimeError(f"MuseScore failed for {out_path}: {err or 'unknown error'}")
-    return out_path
+    return created
 
 
 def convert_many(xml_path: str, targets: list, exe: str, style: str = None):
     """Convert one MusicXML file into several outputs: [(ext, path), ...]."""
     results = []
     for ext, path in targets:
-        convert(xml_path, path, exe, style)
-        results.append(path)
+        results.extend(convert(xml_path, path, exe, style))
     return results

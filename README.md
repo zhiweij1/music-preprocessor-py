@@ -1,123 +1,141 @@
 # music-preprocessor
 
-简谱 DSL → **MuseScore 4**（`.mscz` / `.pdf` / `.png`）。
+**English** · [简体中文](README.zh-CN.md)
 
-把简谱写成一个纯文本 DSL，一条命令生成谱子：
+Turn a plain-text jianpu (numbered notation) DSL into a **MuseScore 4** lead sheet —
+`.mscz`, `.pdf` or `.png` — through standard MusicXML.
 
-- 想要可编辑的工程文件 → `.mscz`（MuseScore 4 直接打开，**默认输出**）
-- 想要打印 → `.pdf`
-- 想要给别的软件或自己排 → `.musicxml`
+![screenshot](docs/screenshot.png)
 
-> **Legacy**：`mpp/lilypond.py` 是早期留下的 LilyPond 后端，仍可用 `-f ly` 生成 `.ly` 源码，
-> 但已不再维护，也不是默认输出（本来要渲染成 PDF 还得自己装 LilyPond）。
+Write music as text, get an editable, printable score. No Finale / Sibelius / LilyPond
+installation needed: MuseScore 4 does the engraving, and the `.dsl` source stays small
+enough to live in git.
 
-📖 **简谱 DSL 语法参考：[docs/DSL.md](docs/DSL.md)**（速查卡 + 完整记号表 + 示例）
+## How it works
 
-## 安装 / 依赖
+```
+song.dsl ─► lexer ─► parser ─► IR ─┬─► MusicXML ─► MuseScore 4 ─► .mscz / .pdf / .png
+                                   └─► LilyPond  ─► .ly            (legacy, unmaintained)
+```
 
-| 依赖 | 说明 |
+## Requirements
+
+| Requirement | Notes |
 |---|---|
-| Python 3.9+ | 必填 |
-| MuseScore 4 | 默认输出（`.mscz`）以及 `.pdf`/`.png` 需要；自动在 `C:\Program Files\MuseScore 4\bin\MuseScore4.exe` 等位置查找 |
+| Python 3.9+ | required |
+| MuseScore 4 | needed for the default `.mscz` output and for `.pdf` / `.png`; auto-detected in the usual install locations, or pass `--musescore PATH` / set `MPP_MUSESCORE` |
 
-没装 MuseScore 也能用 `-f musicxml` / `-f ly` 出中间文件（用 MuseScore 手工打开也行）。
+Without MuseScore you can still emit `.musicxml` (open it in MuseScore by hand) or `.ly`.
 
-## 用法
+## Quick start
 
 ```bash
-# 默认：生成 MuseScore 工程 song.mscz（自动套 Jazz Lead Sheet 样式）
-python mpp.py song.dsl
-python mpp.py song.dsl -f pdf
-
-# 一次出多种
-python mpp.py song.dsl -f mscz,pdf --keep-xml
-
-# 纯文本输出：MusicXML / LilyPond 源码（legacy）
+python mpp.py song.dsl                  # → song.mscz  (default)
+python mpp.py song.dsl -f pdf           # → song.pdf
+python mpp.py song.dsl -f mscz,pdf      # both
 python mpp.py song.dsl -f musicxml -o song.musicxml
-python mpp.py song.dsl -f ly
+python mpp.py song.dsl -f ly            # legacy: LilyPond source on stdout
 ```
 
-Windows 上也可以直接用 `mpp.cmd`：
+On Windows you can use `mpp.cmd` instead of `python mpp.py`.
 
-```bat
-mpp.cmd song.dsl -f mscz
-```
+### Options
 
-### 参数
-
-| 参数 | 说明 |
+| Option | Description |
 |---|---|
-| `-f, --format` | `mscz`（默认）\| `pdf` \| `png` \| `musicxml` \| `ly`（legacy），可逗号组合 |
-| `-o, --output` | 输出路径（只能配合单格式） |
-| `--musescore` | 指定 `MuseScore4.exe`（也可用环境变量 `MPP_MUSESCORE`） |
-| `--style` | 指定 MuseScore 样式 `.mss`，默认用 `assets/jazz-lead-sheet.mss` |
-| `--no-style` | 不套样式（MuseScore 默认版式） |
-| `--keep-xml` | 保留中间 `.musicxml` |
-| `-q, --quiet` | 不打印 warning |
+| `-f, --format` | `mscz` (default) \| `pdf` \| `png` \| `musicxml` \| `ly` (legacy); comma-separate for several |
+| `-o, --output` | output path (single format only) |
+| `--musescore` | path to `MuseScore4.exe` |
+| `--style` | MuseScore style file, defaults to `assets/jazz-lead-sheet.mss` |
+| `--no-style` | don't apply the lead-sheet style |
+| `--keep-xml` | keep the intermediate `.musicxml` |
+| `-q, --quiet` | suppress warnings |
 
-## DSL 速查
+## The DSL in 20 seconds
 
 ```text
 Title:小星星
 Subtitle:带和弦的 Lead Sheet
 Composer:曲：传统
-Poet:词：佚名
-Key:C Time:4/4          % 弱起写 Time:3/4,4
+Key:C Time:4/4          % pickup: Time:3/4,4
 Tempo:4=100
 
-H: 1. 春天来了，花儿开了。
-L: twin-kle twin-kle
-
+H: 一闪一闪亮晶晶        % one hanzi per note; H1:/H2: for verses
 [C] 1 1 [G7] 5 5 | [Am] 6 6 [D7] 5 - |
 1' ^"Chorus" \break 7 6 5 |
-0 是休止，x 也是休止；q/s/d/c/h 是时值前缀；' 高八度、, 低八度；#/b 升降；~ 连音线；( ) 圆滑线
 ```
 
-## 版式
-
-谱面样式在 `assets/jazz-lead-sheet.mss`（来自 MuseScore 的 Jazz Lead Sheet 模板），常用项：
-
-| 样式项 | 当前值 | 作用 |
-|---|---|---|
-| `chordSymbolAFontSize` / `BFontSize` | 12 / 10 | 和弦符号字号 |
-| `chordSymbolAFontStyle` / `BFontStyle` | 0 / 0 | 0 = 不加粗 |
-| `lyricsOddFontSize` / `Even` | 12 | 歌词字号 |
-| `chordSymbolPosAbove` | y = -2.5 | 和弦离五线谱的高度 |
-
-## 行为说明
-
-| 项 | 说明 |
+| Token | Meaning |
 |---|---|
-| `LP: … :LP` 原样 LilyPond | 只对 `.ly` 输出有效；转 MusicXML 时忽略并给 warning |
-| `\命令` / `^"文字"` | MusicXML 只映射 `\break`、`\bar "…"`、`^"…"` / `_"…"`，其余给 warning；`.ly` 原样保留 |
-| 和弦写法 | 交给 MuseScore 解析；`C6/9` 会正确保留，`G7sus4` 会被规范成 `G7sus⁴` |
-| 反复 `R{}` / `A{}` | 暂不支持，会报错 |
-| 歌词位置 | 写在某行音乐下面 → 从那一行第一个音开始；详见 DSL 文档第 7 节 |
+| `1` … `7` | scale degrees of the key |
+| `0` / `x` | rest |
+| `'` / `,` | octave up / down (`1'`, `1,`) |
+| `#` / `b` | sharp / flat (`#4`, `b7`) |
+| `.` | dotted note (`1.`) |
+| `-` | extend the previous note by one beat |
+| `~` | tie to the next note |
+| `(` `)` | slur start / end |
+| `[C]` | chord symbol for the next note |
+| `\|` | barline (`\|\|` double bar) |
+| `q` `s` `d` `c` `h` | eighth / 16th / 32nd / quarter / 64th |
+| `\break` | system break |
+| `^"text"` / `_"text"` | text above / below the staff |
+| `%` | comment |
 
-## 目录结构
+A line of music in the source becomes a system on the page, so you control the layout
+with plain line breaks.
+
+Full reference (Chinese): **[docs/DSL.md](docs/DSL.md)** — cheat sheet, every token,
+lyrics/verse rules, error messages and runnable examples in [`examples/`](examples/).
+
+## Typography
+
+The look comes from `assets/jazz-lead-sheet.mss` (based on MuseScore's *Jazz Lead Sheet*
+template). Frequently tweaked values:
+
+| Style key | Value | Effect |
+|---|---|---|
+| `chordSymbolAFontSize` / `BFontSize` | 12 / 10 | chord symbol size |
+| `chordSymbolAFontStyle` / `BFontStyle` | 0 / 0 | 0 = not bold |
+| `lyricsOddFontSize` / `EvenFontSize` | 12 | lyric size |
+| `chordSymbolPosAbove` | y = -2.5 | distance above the staff |
+
+## Notes & limitations
+
+| Item | Behaviour |
+|---|---|
+| `LP: … :LP` raw LilyPond | only affects `.ly`; ignored (with a warning) for MusicXML |
+| `\command` / `^"text"` | MusicXML maps `\break`, `\bar "…"`, `^"…"` / `_"…"`; anything else warns. `.ly` passes them through |
+| Chord symbols | handed to MuseScore's parser: `C6/9` survives, `G7sus4` is normalised to `G7sus⁴` |
+| Repeats `R{}` / `A{}` | not supported yet (raises an error) |
+| Lyrics placement | a lyric line starts at the first note of the music line above it; parallel verses share the same position |
+| LilyPond backend | **legacy**, unmaintained — kept for `-f ly` only |
+
+## Project layout
 
 ```
 music-preprocessor-py/
-├── mpp.py                 # 入口
+├── mpp.py                 # CLI entry point
 ├── mpp/
-│   ├── lexer.py           # 词法
-│   ├── parser.py          # 语法 → IR
-│   ├── ir.py              # IR 数据结构
-│   ├── lyrics.py          # 歌词分行、分句、对齐
-│   ├── lilypond.py        # LilyPond 后端
-│   ├── musicxml.py        # MusicXML 后端（lead sheet）
-│   ├── musescore.py       # MuseScore CLI 调用
-│   └── cli.py             # 命令行
-├── assets/jazz-lead-sheet.mss   # 谱面样式
-├── docs/DSL.md            # 语法文档
-├── examples/              # 示例谱
-└── tests/                 # 28 个用例 + 19 个 demo 作为 fixtures
+│   ├── lexer.py           # tokenizer
+│   ├── parser.py          # parser → IR
+│   ├── ir.py              # Score / Measure / Note
+│   ├── lyrics.py          # lyric splitting, verse placement
+│   ├── musicxml.py        # MusicXML backend (lead sheet)
+│   ├── musescore.py       # MuseScore CLI wrapper
+│   ├── lilypond.py        # LilyPond backend (legacy)
+│   └── cli.py             # command line
+├── assets/jazz-lead-sheet.mss   # page style
+├── docs/DSL.md            # DSL reference (Chinese)
+├── examples/              # runnable sample scores
+└── tests/                 # 29 tests + 19 demo scores as fixtures
 ```
 
-## 测试
+## Tests
 
 ```bash
 python -m unittest discover -s tests
 ```
 
-覆盖：19 个 demo 全部转换、音高/调号/和弦/歌词/弱起/连音线、错误输入、CLI 行为。
+Covers all 19 demo scores end to end, pitch/key/chord/lyric/pickup/tie handling,
+error input and CLI behaviour.
