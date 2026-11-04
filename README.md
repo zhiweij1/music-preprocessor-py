@@ -85,8 +85,9 @@ H: 一闪一闪亮晶晶        % one hanzi per note; H1:/H2: for verses
 A line of music in the source becomes a system on the page, so you control the layout
 with plain line breaks.
 
-Full reference (Chinese): **[docs/DSL.md](docs/DSL.md)** — cheat sheet, every token,
-lyrics/verse rules, error messages and runnable examples in [`examples/`](examples/).
+Full reference: **[docs/DSL.en.md](docs/DSL.en.md)** (English) · **[docs/DSL.md](docs/DSL.md)** (中文) —
+cheat sheet, every token, lyrics/verse rules, error messages and runnable examples in
+[`examples/`](examples/).
 
 ## Typography
 
@@ -139,3 +140,7 @@ python -m unittest discover -s tests
 
 Covers all 19 demo scores end to end, pitch/key/chord/lyric/pickup/tie handling,
 error input and CLI behaviour.
+
+## License
+
+MIT — see [LICENSE](LICENSE).

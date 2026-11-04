@@ -83,8 +83,8 @@ H: 一闪一闪亮晶晶        % 汉字一字一音；H1:/H2: 分段
 
 源文件里怎么换行，谱面上就怎么换行 —— 排版直接用换行控制。
 
-完整参考（中文）：**[docs/DSL.md](docs/DSL.md)** —— 速查卡、每个记号、歌词/分段规则、
-报错说明，以及 [`examples/`](examples/) 里可直接运行的例子。
+完整参考：**[docs/DSL.md](docs/DSL.md)**（中文）· **[docs/DSL.en.md](docs/DSL.en.md)**（English）——
+速查卡、每个记号、歌词/分段规则、报错说明，以及 [`examples/`](examples/) 里可直接运行的例子。
 
 ## 版式
 
@@ -135,3 +135,7 @@ python -m unittest discover -s tests
 ```
 
 覆盖：19 个 demo 全部转换、音高/调号/和弦/歌词/弱起/连音线、错误输入、CLI 行为。
+
+## 许可证
+
+MIT，见 [LICENSE](LICENSE)。
