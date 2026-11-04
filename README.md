@@ -1,13 +1,15 @@
 # music-preprocessor
 
-简谱 DSL → **LilyPond** / **MusicXML** / **MuseScore 4**（`.mscz` / `.pdf` / `.png`）。
+简谱 DSL → **MuseScore 4**（`.mscz` / `.pdf` / `.png`）。
 
 把简谱写成一个纯文本 DSL，一条命令生成谱子：
 
-- 想要可编辑的工程文件 → `.mscz`（MuseScore 4 直接打开）
+- 想要可编辑的工程文件 → `.mscz`（MuseScore 4 直接打开，**默认输出**）
 - 想要打印 → `.pdf`
-- 想要自己排或给别的软件 → `.musicxml`
-- 想走 LilyPond → `.ly`
+- 想要给别的软件或自己排 → `.musicxml`
+
+> **Legacy**：`mpp/lilypond.py` 是早期留下的 LilyPond 后端，仍可用 `-f ly` 生成 `.ly` 源码，
+> 但已不再维护，也不是默认输出（本来要渲染成 PDF 还得自己装 LilyPond）。
 
 📖 **简谱 DSL 语法参考：[docs/DSL.md](docs/DSL.md)**（速查卡 + 完整记号表 + 示例）
 
@@ -16,24 +18,23 @@
 | 依赖 | 说明 |
 |---|---|
 | Python 3.9+ | 必填 |
-| MuseScore 4 | 仅 `-f mscz/pdf/png` 需要；自动在 `C:\Program Files\MuseScore 4\bin\MuseScore4.exe` 等位置查找 |
+| MuseScore 4 | 默认输出（`.mscz`）以及 `.pdf`/`.png` 需要；自动在 `C:\Program Files\MuseScore 4\bin\MuseScore4.exe` 等位置查找 |
 
-没有 MuseScore 时，仍然可以输出 `.ly` 和 `.musicxml`（用 MuseScore 手工打开也行）。
+没装 MuseScore 也能用 `-f musicxml` / `-f ly` 出中间文件（用 MuseScore 手工打开也行）。
 
 ## 用法
 
 ```bash
-# 1) 输出 LilyPond（默认格式；不带 -o 时打到 stdout）
+# 默认：生成 MuseScore 工程 song.mscz（自动套 Jazz Lead Sheet 样式）
 python mpp.py song.dsl
-python mpp.py song.dsl -o song.ly
-
-# 2) 输出 MusicXML
-python mpp.py song.dsl -f musicxml -o song.musicxml
-
-# 3) 直接出 MuseScore 文件（自动套 Jazz Lead Sheet 样式）
-python mpp.py song.dsl -f mscz
 python mpp.py song.dsl -f pdf
+
+# 一次出多种
 python mpp.py song.dsl -f mscz,pdf --keep-xml
+
+# 纯文本输出：MusicXML / LilyPond 源码（legacy）
+python mpp.py song.dsl -f musicxml -o song.musicxml
+python mpp.py song.dsl -f ly
 ```
 
 Windows 上也可以直接用 `mpp.cmd`：
@@ -46,7 +47,7 @@ mpp.cmd song.dsl -f mscz
 
 | 参数 | 说明 |
 |---|---|
-| `-f, --format` | `ly`（默认）\| `musicxml` \| `mscz` \| `pdf` \| `png`，可逗号组合 |
+| `-f, --format` | `mscz`（默认）\| `pdf` \| `png` \| `musicxml` \| `ly`（legacy），可逗号组合 |
 | `-o, --output` | 输出路径（只能配合单格式） |
 | `--musescore` | 指定 `MuseScore4.exe`（也可用环境变量 `MPP_MUSESCORE`） |
 | `--style` | 指定 MuseScore 样式 `.mss`，默认用 `assets/jazz-lead-sheet.mss` |

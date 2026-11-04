@@ -345,13 +345,13 @@ Key:C Time:4/4
 ## 13. 命令
 
 ```bash
-python mpp.py song.dsl                    # LilyPond（默认，输出到 stdout）
-python mpp.py song.dsl -o song.ly         # 写文件
-python mpp.py song.dsl -f musicxml        # MusicXML
-python mpp.py song.dsl -f mscz            # MuseScore 工程（自动套 lead sheet 样式）
+python mpp.py song.dsl                    # 默认出 MuseScore 工程 song.mscz
+python mpp.py song.dsl -f pdf             # 打印版
 python mpp.py song.dsl -f mscz,pdf        # 一次出两种
+python mpp.py song.dsl -f musicxml        # MusicXML
+python mpp.py song.dsl -f ly              # LilyPond 源码（legacy，打到 stdout）
 ```
 
 Windows 下也可以 `mpp.cmd song.dsl -f pdf`。
 
-参数：`-f`（`ly|musicxml|mscz|pdf|png`，可逗号组合）、`-o`、`--musescore`、`--style`、`--no-style`、`--keep-xml`、`-q`。
+参数：`-f`（`mscz`（默认）\| `pdf` \| `png` \| `musicxml` \| `ly`，可逗号组合）、`-o`、`--musescore`、`--style`、`--no-style`、`--keep-xml`、`-q`。

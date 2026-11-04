@@ -258,10 +258,16 @@ class TestCli(unittest.TestCase):
     def test_ly_to_stdout(self):
         import subprocess
         out = subprocess.run([sys.executable, os.path.join(ROOT, "mpp.py"),
-                              os.path.join(FIXTURES, "twinkle.dsl")],
-                             capture_output=True, text=True)
+                              os.path.join(FIXTURES, "twinkle.dsl"), "-f", "ly"],
+                             capture_output=True, text=True, encoding="utf-8")
         self.assertEqual(out.returncode, 0)
         self.assertTrue(out.stdout.startswith('\\version "2.24.0"'))
+
+    def test_default_format_is_mscz(self):
+        import subprocess
+        out = subprocess.run([sys.executable, os.path.join(ROOT, "mpp.py"), "--help"],
+                             capture_output=True, text=True, encoding="utf-8")
+        self.assertIn("(default: mscz)", out.stdout)
 
     def test_musicxml_file(self):
         import subprocess

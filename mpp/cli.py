@@ -16,11 +16,11 @@ FORMATS = ("ly", "musicxml", "mscz", "pdf", "png")
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="mpp",
-        description="简谱 DSL → LilyPond / MusicXML / MuseScore (.mscz, .pdf, .png)")
+        description="简谱 DSL → MuseScore (.mscz/.pdf/.png)；也可输出 MusicXML、LilyPond(legacy)")
     p.add_argument("input", help="input .dsl file")
     p.add_argument("-o", "--output", help="output path (single format only)")
-    p.add_argument("-f", "--format", default="ly",
-                   help="comma separated: ly, musicxml, mscz, pdf, png (default: ly)")
+    p.add_argument("-f", "--format", default="mscz",
+                   help="comma separated: mscz, pdf, png, musicxml, ly (default: mscz)")
     p.add_argument("--musescore", help="path to MuseScore4.exe")
     p.add_argument("--style", help="MuseScore style file (.mss)")
     p.add_argument("--no-style", action="store_true", help="do not apply the lead-sheet style")
