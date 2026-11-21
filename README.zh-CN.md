@@ -103,11 +103,14 @@ npx vsce package
 
 ### 网页转换器
 
-`web/` 是部署到 GitHub Pages 的静态单页转换器。它通过 Pyodide 在浏览器里跑**同一套
-`mpp` 解析器**（无后端、文本不上传），用 OpenSheetMusicDisplay 渲染谱面，提供两个操作：
-打印/另存为 PDF，或下载 MusicXML（用 MuseScore 打开可另存为 `.mscz`）。部署时
-`web/sync_mpp.py` 会把所需模块从 `mpp/` 复制到 `web/mpp/`——源码只有一份。
-启用方式：仓库 Settings → Pages → Source 选 GitHub Actions。
+`web/` 是部署到 GitHub Pages 的静态单页 **Lead Sheet** 生成器。它通过 Pyodide 在浏览器里
+跑**同一套 `mpp` 解析器**（无后端、文本不上传），用 OpenSheetMusicDisplay 渲染谱面，
+提供两个操作：打印/另存为 PDF，或下载 MusicXML（用 MuseScore 打开可另存为 `.mscz`）。
+部署时 `web/sync_mpp.py` 会把所需模块从 `mpp/` 复制到 `web/mpp/`——源码只有一份。
+
+三个产物（Windows `mpp.exe`、VSCode `.vsix`、网页）由**同一个** `nightly` 工作流产出：
+每天北京时间 20:00（UTC 12:00）触发，没有新 commit 就跳过，网页只在 release 发布后
+才部署。启用方式：仓库 Settings → Pages → Source 选 GitHub Actions。
 
 ## 版式
 
@@ -151,7 +154,7 @@ music-preprocessor-py/
 ├── docs/DSL.md            # DSL 语法文档
 ├── editors/vscode/        # VSCode 插件：高亮 + 诊断 + 补全
 ├── web/                   # 网页转换器（Pyodide + OSMD，部署到 Pages）
-├── .github/workflows/     # nightly binary、VSCode 插件、Pages 部署
+├── .github/workflows/nightly.yml  # 单一 nightly：binary + .vsix + Pages 部署
 ├── examples/              # 示例谱
 └── tests/                 # 42 个测试 + 19 个 demo 谱作为 fixtures
 ```
