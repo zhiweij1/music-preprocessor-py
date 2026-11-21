@@ -46,6 +46,8 @@ Windows 上也可以从 **Nightly** release 下载独立的 `mpp.exe`（不需�
 | `-f, --format` | `mscz`（默认）\| `pdf` \| `png` \| `musicxml` \| `ly`（legacy），可逗号组合 |
 | `-o, --output` | 输出路径（只能配合单格式） |
 | `-t, --transpose` | 转到指定调（如 `D`、`Bb`、`F#m`）；简谱音级不变，和弦根音按级数平移 |
+| `--auto-break` | 换行交给 MuseScore 决定（默认按源文件换行分行） |
+| `--chord-left` | 和弦首字符对齐音符（默认居中对齐） |
 | `--musescore` | 指定 `MuseScore4.exe` |
 | `--style` | MuseScore 样式文件，默认 `assets/jazz-lead-sheet.mss` |
 | `--no-style` | 不套 lead sheet 样式 |

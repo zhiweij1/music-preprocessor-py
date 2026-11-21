@@ -365,6 +365,8 @@ python mpp.py song.dsl -f mscz,pdf        # 一次出两种
 python mpp.py song.dsl -f musicxml        # MusicXML
 python mpp.py song.dsl -f ly              # LilyPond 源码（legacy，打到 stdout）
 python mpp.py song.dsl --transpose Bb -f pdf  # 转到 Bb 调再出谱
+python mpp.py song.dsl --auto-break -f pdf   # 换行交给 MuseScore 决定
+python mpp.py song.dsl --chord-left -f pdf   # 和弦首字符对齐音符（默认居中）
 ```
 
 Windows 下也可以 `mpp.cmd song.dsl -f pdf`。
@@ -373,4 +375,11 @@ Windows 下也可以 `mpp.cmd song.dsl -f pdf`。
 调号改变；和弦根音（含斜杠低音）按新旧主音的半音差平移，并按新调拼写，
 和弦后缀（`m7`、`maj7`、`6/9` 等）保持不变。`KEY` 用和第 3 节相同的调名写法。
 
-参数：`-f`（`mscz`（默认）\| `pdf` \| `png` \| `musicxml` \| `ly`，可逗号组合）、`-o`、`-t`/`--transpose`、`--musescore`、`--style`、`--no-style`、`--keep-xml`、`-q`。
+`--auto-break` 忽略源文件里的换行，让 MuseScore 自己决定每行放几小节（默认按
+源文件换行分行）。`--chord-left` 把和弦符号左移约半个符号宽，让根音字母大致落在
+音符正上方（默认是和弦中心对齐音符）。两者只影响 MuseScore 输出（`.mscz`/`.pdf`/
+`.png`），对 `-f musicxml` 和 legacy 的 `-f ly` 无效。
+
+标题区到第一行谱表的距离已按默认样式压缩；实际字号由样式文件控制，不受影响。
+
+参数：`-f`（`mscz`（默认）\| `pdf` \| `png` \| `musicxml` \| `ly`，可逗号组合）、`-o`、`-t`/`--transpose`、`--auto-break`、`--chord-left`、`--musescore`、`--style`、`--no-style`、`--keep-xml`、`-q`。
