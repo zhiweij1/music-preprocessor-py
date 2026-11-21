@@ -49,13 +49,8 @@ jobs:
 
       - name: Build single-file binary
         if: steps.gate.outputs.skip != 'true'
-        run: |
-          python -m PyInstaller --onefile --name mpp ^
-            --runtime-tmpdir . ^
-            --hidden-import mpp.transpose ^
-            --hidden-import mpp.diagnostics ^
-            --add-data "assets;assets" ^
-            mpp.py
+        shell: pwsh
+        run: python -m PyInstaller --onefile --name mpp --runtime-tmpdir . --hidden-import mpp.transpose --hidden-import mpp.diagnostics --add-data "assets;assets" mpp.py
 
       - name: Smoke test binary
         if: steps.gate.outputs.skip != 'true'
