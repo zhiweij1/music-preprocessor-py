@@ -34,10 +34,12 @@ python mpp.py song.dsl                  # → song.mscz  (default)
 python mpp.py song.dsl -f pdf           # → song.pdf
 python mpp.py song.dsl -f mscz,pdf      # both
 python mpp.py song.dsl -f musicxml -o song.musicxml
+python mpp.py song.dsl --transpose Bb -f pdf   # → song.pdf in Bb (chords follow)
 python mpp.py song.dsl -f ly            # legacy: LilyPond source on stdout
 ```
 
-On Windows you can use `mpp.cmd` instead of `python mpp.py`.
+On Windows you can also download the standalone `mpp.exe` from the **Nightly** release
+(no Python needed; MuseScore 4 still needed for `.mscz` / `.pdf` / `.png`).
 
 ### Options
 
@@ -45,6 +47,7 @@ On Windows you can use `mpp.cmd` instead of `python mpp.py`.
 |---|---|
 | `-f, --format` | `mscz` (default) \| `pdf` \| `png` \| `musicxml` \| `ly` (legacy); comma-separate for several |
 | `-o, --output` | output path (single format only) |
+| `-t, --transpose` | transpose to `KEY` (e.g. `D`, `Bb`, `F#m`); jianpu degrees stay, chord roots shift by interval |
 | `--musescore` | path to `MuseScore4.exe` |
 | `--style` | MuseScore style file, defaults to `assets/jazz-lead-sheet.mss` |
 | `--no-style` | don't apply the lead-sheet style |
@@ -89,6 +92,30 @@ Full reference: **[docs/DSL.en.md](docs/DSL.en.md)** (English) · **[docs/DSL.md
 cheat sheet, every token, lyrics/verse rules, error messages and runnable examples in
 [`examples/`](examples/).
 
+### VSCode extension
+
+`editors/vscode/` has a language extension: syntax highlighting, live diagnostics
+(reusing the exact same parser, with line/column and did-you-mean), and basic completion
+of keys, declarations and chord names. Build/install it with:
+
+```bash
+cd editors/vscode
+npm install
+npx vsce package
+```
+
+Set `jianpu.pythonPath` to a Python 3.9+ interpreter if `python` is not on PATH.
+The server is pure standard library — no pip dependencies.
+
+### Web converter
+
+`web/` is a static single-page converter deployed to GitHub Pages. It runs the **same
+`mpp` parser** in the browser via Pyodide (no server, no upload), renders the result with
+OpenSheetMusicDisplay, and offers two actions: print/save as PDF, or download MusicXML
+(open it in MuseScore to save as `.mscz`). `web/sync_mpp.py` copies the needed modules
+from `mpp/` into `web/mpp/` at deploy time — there is only one copy of the source.
+To enable: repository Settings → Pages → Source = GitHub Actions.
+
 ## Typography
 
 The look comes from `assets/jazz-lead-sheet.mss` (based on MuseScore's *Jazz Lead Sheet*
@@ -123,13 +150,18 @@ music-preprocessor-py/
 │   ├── ir.py              # Score / Measure / Note
 │   ├── lyrics.py          # lyric splitting, verse placement
 │   ├── musicxml.py        # MusicXML backend (lead sheet)
+│   ├── transpose.py       # key change + chord transposition
+│   ├── diagnostics.py     # error positions + did-you-mean (CLI & LSP)
 │   ├── musescore.py       # MuseScore CLI wrapper
 │   ├── lilypond.py        # LilyPond backend (legacy)
 │   └── cli.py             # command line
 ├── assets/jazz-lead-sheet.mss   # page style
 ├── docs/DSL.md            # DSL reference (Chinese)
+├── editors/vscode/        # VSCode extension: highlight + diagnostics + completion
+├── web/                   # browser converter (Pyodide + OSMD, deployed to Pages)
+├── .github/workflows/     # nightly binary, VSCode extension, Pages deploy
 ├── examples/              # runnable sample scores
-└── tests/                 # 29 tests + 19 demo scores as fixtures
+└── tests/                 # 42 tests + 19 demo scores as fixtures
 ```
 
 ## Tests
@@ -139,7 +171,7 @@ python -m unittest discover -s tests
 ```
 
 Covers all 19 demo scores end to end, pitch/key/chord/lyric/pickup/tie handling,
-error input and CLI behaviour.
+transposition, error input and CLI behaviour.
 
 ## License
 

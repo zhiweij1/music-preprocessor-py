@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>简谱 DSL → 歌谱（在线）</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/opensheetmusicdisplay@1.8.7/build/opensheetmusicdisplay.min.js"></script>
+</head>
+<body>
+  <header>
+    <h1>简谱 DSL <span>→</span> 歌谱</h1>
+    <p>在浏览器里转换，文本不上传服务器。转换逻辑复用 <code>mpp</code> 解析器。</p>
+  </header>
+
+  <div id="status" class="status loading">正在加载转换引擎（Pyodide）…</div>
+
+  <main>
+    <section class="editor">
+      <div class="field">
+        <label for="key-select">调号（留空则保持原调）</label>
+        <select id="key-select">
+          <option value="">— 不转调 —</option>
+          <optgroup label="大调">
+            <option>C</option><option>G</option><option>D</option><option>A</option>
+            <option>E</option><option>B</option><option>F#</option><option>C#</option>
+            <option>F</option><option>Bb</option><option>Eb</option><option>Ab</option>
+            <option>Db</option><option>Gb</option><option>Cb</option>
+          </optgroup>
+          <optgroup label="小调">
+            <option>Am</option><option>Em</option><option>Bm</option><option>F#m</option>
+            <option>C#m</option><option>G#m</option><option>D#m</option><option>A#m</option>
+            <option>Dm</option><option>Gm</option><option>Cm</option><option>Fm</option>
+            <option>Bbm</option><option>Ebm</option><option>Abm</option>
+          </optgroup>
+        </select>
+      </div>
+      <div class="field grow">
+        <label for="dsl-input">简谱 DSL</label>
+        <textarea id="dsl-input" spellcheck="false" autocomplete="off"></textarea>
+      </div>
+      <button id="convert-btn" class="primary" disabled>生成谱面</button>
+      <div class="actions">
+        <button id="pdf-btn" disabled>打开 PDF</button>
+        <button id="download-btn" disabled>下载 MusicXML</button>
+      </div>
+      <div id="messages" class="messages"></div>
+    </section>
+
+    <section class="preview">
+      <div id="score"></div>
+    </section>
+  </main>
+
+  <footer>
+    谱面由 <a href="https://opensheetmusicdisplay.org/" target="_blank" rel="noopener">OpenSheetMusicDisplay</a> 渲染 ·
+    <a href="https://pyodide.org/" target="_blank" rel="noopener">Pyodide</a> 在浏览器中运行原版 Python 解析器
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

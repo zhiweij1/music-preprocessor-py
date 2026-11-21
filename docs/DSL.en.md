@@ -344,6 +344,19 @@ LP:
 | missing `Key:` or `Time:` | error: `No Key: declaration found` |
 | unknown key (`Key:H`) | error: `Unknown key 'H'` |
 
+Errors include line/column and a `^` caret; misspelled keywords/keys also get a
+`did you mean` hint:
+
+```text
+Line 1, column 7:
+  Key:C Tiem:4/4
+        ^
+  unrecognised token 'Tiem:4/4'
+  hint: did you mean 'Time:'?
+```
+
+The same diagnostics appear live as squiggles in the VSCode extension.
+
 ## 12. Complete examples
 
 Four runnable examples live in `examples/`:
@@ -370,9 +383,16 @@ python mpp.py song.dsl -f pdf             # printable PDF
 python mpp.py song.dsl -f mscz,pdf        # both at once
 python mpp.py song.dsl -f musicxml        # MusicXML
 python mpp.py song.dsl -f ly              # LilyPond source (legacy, stdout)
+python mpp.py song.dsl --transpose Bb -f pdf  # transpose to Bb, then engrave
 ```
 
 On Windows you can also use `mpp.cmd song.dsl -f pdf`.
 
+`-t` / `--transpose KEY` transposes the whole song. Jianpu degrees are movable-do, so
+note tokens stay the same and only the key changes; chord roots (including slash basses)
+shift by the interval between the old and new tonics and are respelled for the target key.
+Chord suffixes (`m7`, `maj7`, `6/9`, ...) are preserved. `KEY` uses the same names as
+section 3.
+
 Options: `-f` (`mscz` (default) | `pdf` | `png` | `musicxml` | `ly`, comma-separated),
-`-o`, `--musescore`, `--style`, `--no-style`, `--keep-xml`, `-q`.
+`-o`, `-t`/`--transpose`, `--musescore`, `--style`, `--no-style`, `--keep-xml`, `-q`.

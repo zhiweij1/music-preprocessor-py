@@ -21,6 +21,8 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("-o", "--output", help="output path (single format only)")
     p.add_argument("-f", "--format", default="mscz",
                    help="comma separated: mscz, pdf, png, musicxml, ly (default: mscz)")
+    p.add_argument("-t", "--transpose", metavar="KEY",
+                   help="transpose to KEY (e.g. D, Bb, F#m); chord roots follow the shift")
     p.add_argument("--musescore", help="path to MuseScore4.exe")
     p.add_argument("--style", help="MuseScore style file (.mss)")
     p.add_argument("--no-style", action="store_true", help="do not apply the lead-sheet style")
@@ -68,6 +70,9 @@ def main(argv=None) -> int:
         with open(args.input, encoding="utf-8-sig") as fh:
             source = fh.read()
         score = parse_text(source)
+        if args.transpose:
+            from .transpose import transpose_score
+            transpose_score(score, args.transpose)
     except (OSError, DslError, ValueError) as exc:
         print(f"Error: {exc}", file=sys.stderr)
         return 1

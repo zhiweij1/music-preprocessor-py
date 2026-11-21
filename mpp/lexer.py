@@ -35,6 +35,7 @@ class Token:
     value: str
     line: int = 0
     verse: str = ""
+    column: int = 0
 
 
 META_NAMES = (
@@ -136,6 +137,7 @@ def tokenize(source: str) -> list:
     tokens = []
     pos = 0
     line = 1
+    line_start = 0
     n = len(source)
 
     while pos < n:
@@ -143,6 +145,7 @@ def tokenize(source: str) -> list:
         while pos < n and source[pos].isspace():
             if source[pos] == "\n":
                 line += 1
+                line_start = pos + 1
             pos += 1
         if pos >= n:
             break
@@ -169,7 +172,8 @@ def tokenize(source: str) -> list:
                 tail = tail[:-1]
             raw += tail
             for verse, text, hanzi in split_lyric_line(raw):
-                tok = Token(T.LYRIC_HANZI if hanzi else T.LYRIC_LATIN, text, line)
+                tok = Token(T.LYRIC_HANZI if hanzi else T.LYRIC_LATIN, text, line,
+                            column=start - line_start + 1)
                 tok.verse = verse
                 tokens.append(tok)
             continue
@@ -186,6 +190,7 @@ def tokenize(source: str) -> list:
 
         tok = classify(raw)
         tok.line = line
+        tok.column = start - line_start + 1
         tokens.append(tok)
 
     tokens.append(Token(T.EOF, "", line))
