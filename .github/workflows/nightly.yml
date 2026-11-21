@@ -1,48 +1,59 @@
-name: Nightly binary
+name: Nightly
 
 on:
   schedule:
-    - cron: '0 18 * * *'   # 每天 UTC 18:00（北京时间次日 02:00）
-  workflow_dispatch:
-  push:
-    branches: [main]       # 有 commit 也立即构建，不必等 nightly
+    - cron: '0 12 * * *'   # 每天 UTC 12:00 = 北京时间 20:00
+  workflow_dispatch:      # 手动触发（此时跳过「无更新则跳过」的检查）
 
 permissions:
   contents: write
+  pages: write
+  id-token: write
 
 concurrency:
-  group: nightly-binary
-  cancel-in-progress: true
+  group: nightly
+  cancel-in-progress: false
 
 jobs:
   build:
     runs-on: windows-latest
+    outputs:
+      skip: ${{ steps.gate.outputs.skip }}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
 
-      - name: Skip if no new commit since last nightly
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Gate — skip if no new commit since last nightly
         id: gate
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "Manual trigger — forcing build."
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
           HEAD_SHA="${{ github.sha }}"
           LAST_BODY=$(gh release view nightly --json body -q .body 2>/dev/null || true)
           if echo "$LAST_BODY" | grep -q "$HEAD_SHA"; then
+            echo "No new commits since last nightly ($HEAD_SHA). Skipping."
             echo "skip=true" >> "$GITHUB_OUTPUT"
-            echo "No new commits since last nightly ($HEAD_SHA). Skipping build."
           else
-            echo "skip=false" >> "$GITHUB_OUTPUT"
             echo "New commit $HEAD_SHA — building."
+            echo "skip=false" >> "$GITHUB_OUTPUT"
           fi
 
+      # ---- Windows binary ---------------------------------------------
       - name: Install PyInstaller
         if: steps.gate.outputs.skip != 'true'
         run: python -m pip install --upgrade pyinstaller
@@ -58,21 +69,56 @@ jobs:
           .\dist\mpp.exe --version
           .\dist\mpp.exe examples/01_basics.dsl -f musicxml -o smoke.musicxml
 
-      - name: Package
+      - name: Package binary
         if: steps.gate.outputs.skip != 'true'
-        run: |
-          Compress-Archive -Path dist\mpp.exe, LICENSE -DestinationPath mpp-windows.zip -Force
+        run: Compress-Archive -Path dist\mpp.exe, LICENSE -DestinationPath mpp-windows.zip -Force
 
+      # ---- VSCode extension -------------------------------------------
+      - name: Install extension dependencies
+        if: steps.gate.outputs.skip != 'true'
+        working-directory: editors/vscode
+        run: npm install
+
+      - name: Package .vsix
+        if: steps.gate.outputs.skip != 'true'
+        working-directory: editors/vscode
+        run: npx --yes @vscode/vsce package --allow-missing-repository --skip-license
+
+      # ---- One release containing both artifacts ----------------------
       - name: Publish nightly release
         if: steps.gate.outputs.skip != 'true'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: nightly
-          name: Nightly (Windows)
+          name: Nightly
           body: |
             Automated nightly build. Commit: ${{ github.sha }}
 
-            `mpp.exe` is standalone — Python is not required.
-            MuseScore 4 must be installed separately for `.mscz` / `.pdf` / `.png` output.
-          files: mpp-windows.zip
+            - `mpp-windows.zip` — standalone Windows binary (Python not required;
+              MuseScore 4 needed separately for `.mscz` / `.pdf` / `.png`).
+            - `jianpu-dsl-*.vsix` — VSCode extension (highlight / diagnostics / completion).
+          files: |
+            mpp-windows.zip
+            editors/vscode/*.vsix
           prerelease: true
+
+  deploy:
+    needs: build
+    if: needs.build.outputs.skip != 'true'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Sync mpp sources into web/
+        run: python web/sync_mpp.py
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: web
+      - id: deployment
+        uses: actions/deploy-pages@v4

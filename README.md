@@ -109,12 +109,16 @@ The server is pure standard library — no pip dependencies.
 
 ### Web converter
 
-`web/` is a static single-page converter deployed to GitHub Pages. It runs the **same
-`mpp` parser** in the browser via Pyodide (no server, no upload), renders the result with
-OpenSheetMusicDisplay, and offers two actions: print/save as PDF, or download MusicXML
-(open it in MuseScore to save as `.mscz`). `web/sync_mpp.py` copies the needed modules
-from `mpp/` into `web/mpp/` at deploy time — there is only one copy of the source.
-To enable: repository Settings → Pages → Source = GitHub Actions.
+`web/` is a static single-page **Lead Sheet** generator deployed to GitHub Pages. It runs
+the **same `mpp` parser** in the browser via Pyodide (no server, no upload), renders the
+result with OpenSheetMusicDisplay, and offers two actions: print/save as PDF, or download
+MusicXML (open it in MuseScore to save as `.mscz`). `web/sync_mpp.py` copies the needed
+modules from `mpp/` into `web/mpp/` at deploy time — there is only one copy of the source.
+
+All three artifacts (Windows `mpp.exe`, VSCode `.vsix`, and the web page) are produced by
+**one** `nightly` workflow: daily at 20:00 Beijing time (12:00 UTC), skipped when there
+are no new commits, and the page is deployed only after the release is published. Enable
+Pages once: repository Settings → Pages → Source = GitHub Actions.
 
 ## Typography
 
@@ -159,7 +163,7 @@ music-preprocessor-py/
 ├── docs/DSL.md            # DSL reference (Chinese)
 ├── editors/vscode/        # VSCode extension: highlight + diagnostics + completion
 ├── web/                   # browser converter (Pyodide + OSMD, deployed to Pages)
-├── .github/workflows/     # nightly binary, VSCode extension, Pages deploy
+├── .github/workflows/nightly.yml  # single nightly: binary + .vsix + Pages deploy
 ├── examples/              # runnable sample scores
 └── tests/                 # 42 tests + 19 demo scores as fixtures
 ```
