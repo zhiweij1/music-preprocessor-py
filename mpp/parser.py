@@ -1,11 +1,7 @@
 # -*- coding: utf-8 -*-
 """Recursive-descent parser: tokens -> Score IR."""
-from .ir import LyricsLine, Measure, Note, Score
+from .ir import DslError, LyricsLine, Measure, Note, Score
 from .lexer import T, Token
-
-
-class DslError(Exception):
-    pass
 
 
 def _trim(text: str) -> str:
@@ -13,8 +9,9 @@ def _trim(text: str) -> str:
 
 
 class Parser:
-    def __init__(self, tokens: list):
+    def __init__(self, tokens: list, source: str = ""):
         self.tokens = tokens
+        self.source = source
         self.pos = 0
         self.pending_chord = ""
         self.last_note_line = None
@@ -33,9 +30,12 @@ class Parser:
         self.pos += 1
         return tok
 
+    def _err(self, tok: Token, message: str, suggestion: str = "") -> DslError:
+        return DslError(message, tok.line, tok.column, self.source, suggestion)
+
     # -- public ----------------------------------------------------------
     def parse(self) -> Score:
-        score = Score()
+        score = Score(source=self.source)
         measure = Measure()
 
         def flush():
@@ -50,6 +50,7 @@ class Parser:
             if tok.type == T.KEY:
                 self.advance()
                 score.key = tok.value
+                score.key_line, score.key_column = tok.line, tok.column
             elif tok.type == T.TIME:
                 self.advance()
                 score.time_signature = tok.value
@@ -61,7 +62,10 @@ class Parser:
                 self.pending_chord = tok.value
             elif tok.type == T.NOTE:
                 self.advance()
-                note = self.parse_note_token(tok.value)
+                try:
+                    note = self.parse_note_token(tok.value)
+                except DslError as exc:
+                    raise self._err(tok, exc.message) from exc
                 note.chord = self.pending_chord
                 self.pending_chord = ""
                 # a new source line starts a new system
@@ -76,12 +80,12 @@ class Parser:
             elif tok.type == T.DASH:
                 self.advance()
                 if not measure.notes:
-                    raise DslError(f"Line {tok.line}: '-' dash must follow a note")
+                    raise self._err(tok, "'-' dash must follow a note")
                 measure.notes[-1].dash_count += 1
             elif tok.type in (T.TIE, T.SLUR_BEGIN, T.SLUR_END):
                 self.advance()
                 if not measure.notes:
-                    raise DslError(f"Line {tok.line}: '{tok.value}' must follow a note")
+                    raise self._err(tok, f"'{tok.value}' must follow a note")
                 last = measure.notes[-1]
                 if tok.type == T.TIE:
                     last.tie_to_next = True
@@ -95,8 +99,7 @@ class Parser:
                     measure.end_bar = tok.value if tok.type == T.BARLINE_DOUBLE else ""
                 flush()
             elif tok.type in (T.REPEAT_BEGIN, T.REPEAT_END, T.ALT_BEGIN):
-                raise DslError(
-                    f"Line {tok.line}: repeat/alternate notation not supported yet")
+                raise self._err(tok, "repeat/alternate notation not supported yet")
             elif tok.type in (T.LYRIC_HANZI, T.LYRIC_LATIN):
                 self.advance()
                 inline = (tok.line == self.last_lyric_line)
@@ -115,7 +118,7 @@ class Parser:
             elif tok.type == T.LILY_WORD:
                 self.advance()
                 if not measure.notes:
-                    raise DslError(f"Line {tok.line}: '{tok.value}' must follow a note")
+                    raise self._err(tok, f"'{tok.value}' must follow a note")
                 measure.notes[-1].after.append(tok.value)
             elif tok.type == T.LP_BLOCK:
                 self.advance()
@@ -137,9 +140,11 @@ class Parser:
             elif tok.type == T.EOF:
                 break
             elif tok.type == T.ERROR:
-                raise DslError(f"Line {tok.line}: unrecognised token '{tok.value}'")
+                from .diagnostics import explain_bad_token
+                message, hint = explain_bad_token(tok.value)
+                raise self._err(tok, message, hint)
             else:  # pragma: no cover
-                raise DslError(f"Line {tok.line}: unexpected token '{tok.value}'")
+                raise self._err(tok, f"unexpected token '{tok.value}'")
 
         flush()
         return score
@@ -192,4 +197,4 @@ class Parser:
 
 def parse_text(text: str) -> Score:
     from .lexer import tokenize
-    return Parser(tokenize(text)).parse()
+    return Parser(tokenize(text), source=text).parse()

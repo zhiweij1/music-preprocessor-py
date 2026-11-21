@@ -155,7 +155,14 @@ def to_musicxml(score: Score) -> str:
     if not score.time_signature:
         raise ValueError("No Time: declaration found")
 
-    fifths, mode, scale = key_info(score.key)
+    try:
+        fifths, mode, scale = key_info(score.key)
+    except ValueError as exc:
+        from .diagnostics import suggest_key
+        from .ir import DslError
+        hint = suggest_key(score.key)
+        raise DslError(exc.args[0], score.key_line, score.key_column,
+                       score.source, hint) from exc
     minor = is_minor_key(score.key)
     from .lilypond import minor_degree_to_major, octave_number
 

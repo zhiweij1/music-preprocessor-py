@@ -326,6 +326,18 @@ LP:
 | 缺少 `Key:` 或 `Time:` | 报错：`No Key: declaration found` |
 | 未知调名（如 `Key:H`） | 报错：`Unknown key 'H'` |
 
+报错信息带行列号和 `^` 定位，拼错的关键字/调名还会给出 `did you mean` 建议：
+
+```text
+Line 1, column 7:
+  Key:C Tiem:4/4
+        ^
+  unrecognised token 'Tiem:4/4'
+  hint: did you mean 'Time:'?
+```
+
+同样的诊断在 VSCode 插件里以波浪线形式实时显示。
+
 ## 12. 完整示例
 
 仓库里 `examples/` 下有四份可直接运行的例子：
@@ -352,8 +364,13 @@ python mpp.py song.dsl -f pdf             # 打印版
 python mpp.py song.dsl -f mscz,pdf        # 一次出两种
 python mpp.py song.dsl -f musicxml        # MusicXML
 python mpp.py song.dsl -f ly              # LilyPond 源码（legacy，打到 stdout）
+python mpp.py song.dsl --transpose Bb -f pdf  # 转到 Bb 调再出谱
 ```
 
 Windows 下也可以 `mpp.cmd song.dsl -f pdf`。
 
-参数：`-f`（`mscz`（默认）\| `pdf` \| `png` \| `musicxml` \| `ly`，可逗号组合）、`-o`、`--musescore`、`--style`、`--no-style`、`--keep-xml`、`-q`。
+`-t` / `--transpose KEY` 把整首歌转到新调。简谱音级是首调的，所以音符记号不变、
+调号改变；和弦根音（含斜杠低音）按新旧主音的半音差平移，并按新调拼写，
+和弦后缀（`m7`、`maj7`、`6/9` 等）保持不变。`KEY` 用和第 3 节相同的调名写法。
+
+参数：`-f`（`mscz`（默认）\| `pdf` \| `png` \| `musicxml` \| `ly`，可逗号组合）、`-o`、`-t`/`--transpose`、`--musescore`、`--style`、`--no-style`、`--keep-xml`、`-q`。

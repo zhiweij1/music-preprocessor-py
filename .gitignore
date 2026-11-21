@@ -18,3 +18,11 @@ __pycache__/
 work/
 out/
 demo_out/
+
+# PyInstaller / VSCode 插件产物
+build/
+dist/
+*.spec
+node_modules/
+*.vsix
+web/mpp/

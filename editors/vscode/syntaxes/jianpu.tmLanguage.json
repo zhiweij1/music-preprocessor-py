@@ -1,0 +1,43 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "简谱 DSL",
+  "scopeName": "source.jianpu",
+  "patterns": [
+    { "include": "#comment" },
+    { "include": "#declaration" },
+    { "include": "#chord" },
+    { "include": "#lyric" },
+    { "include": "#note" },
+    { "include": "#barline" }
+  ],
+  "repository": {
+    "comment": {
+      "match": "%.*$",
+      "name": "comment.line.percent.jianpu"
+    },
+    "declaration": {
+      "match": "^\\s*(Key|Time|Tempo|Title|Subtitle|Subsubtitle|Composer|Poet|Instrument|Arranger|Copyright)(:)(.*)$",
+      "captures": {
+        "1": { "name": "keyword.control.declaration.jianpu" },
+        "2": { "name": "punctuation.separator.jianpu" },
+        "3": { "name": "string.unquoted.value.jianpu" }
+      }
+    },
+    "chord": {
+      "match": "\\[[^\\]]*\\]",
+      "name": "entity.name.function.chord.jianpu"
+    },
+    "lyric": {
+      "match": "^\\s*(H\\d*|L\\d*):.*$",
+      "name": "string.quoted.lyric.jianpu"
+    },
+    "note": {
+      "match": "\\b(q|Q|s|S|d|D|c|C|h|H)?(#|b)?([0-9xX])('+|,+|\\.)?\\b",
+      "name": "constant.numeric.note.jianpu"
+    },
+    "barline": {
+      "match": "\\|\\||[|.:]",
+      "name": "punctuation.definition.barline.jianpu"
+    }
+  }
+}

@@ -33,10 +33,11 @@ python mpp.py song.dsl                  # → song.mscz（默认）
 python mpp.py song.dsl -f pdf           # → song.pdf
 python mpp.py song.dsl -f mscz,pdf      # 两个都要
 python mpp.py song.dsl -f musicxml -o song.musicxml
+python mpp.py song.dsl --transpose Bb -f pdf  # → song.pdf（转到 Bb 调）
 python mpp.py song.dsl -f ly            # legacy：LilyPond 源码打到 stdout
 ```
 
-Windows 上可以用 `mpp.cmd` 代替 `python mpp.py`。
+Windows 上也可以从 **Nightly** release 下载独立的 `mpp.exe`（不需要 Python；出 `.mscz` / `.pdf` / `.png` 仍需装 MuseScore 4）。
 
 ### 参数
 
@@ -44,6 +45,7 @@ Windows 上可以用 `mpp.cmd` 代替 `python mpp.py`。
 |---|---|
 | `-f, --format` | `mscz`（默认）\| `pdf` \| `png` \| `musicxml` \| `ly`（legacy），可逗号组合 |
 | `-o, --output` | 输出路径（只能配合单格式） |
+| `-t, --transpose` | 转到指定调（如 `D`、`Bb`、`F#m`）；简谱音级不变，和弦根音按级数平移 |
 | `--musescore` | 指定 `MuseScore4.exe` |
 | `--style` | MuseScore 样式文件，默认 `assets/jazz-lead-sheet.mss` |
 | `--no-style` | 不套 lead sheet 样式 |
@@ -86,6 +88,27 @@ H: 一闪一闪亮晶晶        % 汉字一字一音；H1:/H2: 分段
 完整参考：**[docs/DSL.md](docs/DSL.md)**（中文）· **[docs/DSL.en.md](docs/DSL.en.md)**（English）——
 速查卡、每个记号、歌词/分段规则、报错说明，以及 [`examples/`](examples/) 里可直接运行的例子。
 
+### VSCode 插件
+
+`editors/vscode/` 里有语言扩展：语法高亮、实时诊断（复用同一个解析器，带行列号和
+did-you-mean）、调名/声明/和弦的基础补全。构建安装：
+
+```bash
+cd editors/vscode
+npm install
+npx vsce package
+```
+
+如果 `python` 不在 PATH 上，设置 `jianpu.pythonPath` 指向 Python 3.9+。LSP server 纯标准库，无需 pip 依赖。
+
+### 网页转换器
+
+`web/` 是部署到 GitHub Pages 的静态单页转换器。它通过 Pyodide 在浏览器里跑**同一套
+`mpp` 解析器**（无后端、文本不上传），用 OpenSheetMusicDisplay 渲染谱面，提供两个操作：
+打印/另存为 PDF，或下载 MusicXML（用 MuseScore 打开可另存为 `.mscz`）。部署时
+`web/sync_mpp.py` 会把所需模块从 `mpp/` 复制到 `web/mpp/`——源码只有一份。
+启用方式：仓库 Settings → Pages → Source 选 GitHub Actions。
+
 ## 版式
 
 样式在 `assets/jazz-lead-sheet.mss`（基于 MuseScore 的 *Jazz Lead Sheet* 模板），常用项：
@@ -119,13 +142,18 @@ music-preprocessor-py/
 │   ├── ir.py              # Score / Measure / Note
 │   ├── lyrics.py          # 歌词分行、分句、对齐
 │   ├── musicxml.py        # MusicXML 后端（lead sheet）
+│   ├── transpose.py       # 转调与和弦平移
+│   ├── diagnostics.py     # 错误定位与 did-you-mean（CLI 与 LSP 共用）
 │   ├── musescore.py       # MuseScore CLI 调用
 │   ├── lilypond.py        # LilyPond 后端（legacy）
 │   └── cli.py             # 命令行
 ├── assets/jazz-lead-sheet.mss   # 谱面样式
 ├── docs/DSL.md            # DSL 语法文档
+├── editors/vscode/        # VSCode 插件：高亮 + 诊断 + 补全
+├── web/                   # 网页转换器（Pyodide + OSMD，部署到 Pages）
+├── .github/workflows/     # nightly binary、VSCode 插件、Pages 部署
 ├── examples/              # 示例谱
-└── tests/                 # 29 个测试 + 19 个 demo 谱作为 fixtures
+└── tests/                 # 42 个测试 + 19 个 demo 谱作为 fixtures
 ```
 
 ## 测试
@@ -134,7 +162,7 @@ music-preprocessor-py/
 python -m unittest discover -s tests
 ```
 
-覆盖：19 个 demo 全部转换、音高/调号/和弦/歌词/弱起/连音线、错误输入、CLI 行为。
+覆盖：19 个 demo 全部转换、音高/调号/和弦/歌词/弱起/连音线、移调、错误输入、CLI 行为。
 
 ## 许可证
 

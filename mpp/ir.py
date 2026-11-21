@@ -4,6 +4,21 @@ from dataclasses import dataclass, field
 
 
 @dataclass
+class DslError(ValueError):
+    """DSL 解析错误，携带行列位置与建议，供 CLI 和 LSP 共用。"""
+    message: str
+    line: int = 0
+    column: int = 0
+    source: str = ""
+    suggestion: str = ""
+
+    def __str__(self) -> str:
+        from .diagnostics import render_error
+        return render_error(self.message, self.line, self.column,
+                            self.source, self.suggestion)
+
+
+@dataclass
 class Note:
     scale_degree: int = 1      # 1-7, 0 = rest
     octave_shift: int = 0      # ' up, , down
@@ -50,6 +65,9 @@ class Score:
     lp_blocks: list = field(default_factory=list)
     lyrics: list = field(default_factory=list)
     warnings: list = field(default_factory=list)
+    key_line: int = 0
+    key_column: int = 0
+    source: str = ""
 
     def warn(self, message: str) -> None:
         self.warnings.append(message)

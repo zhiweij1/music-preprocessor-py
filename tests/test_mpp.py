@@ -230,6 +230,42 @@ class TestMusicXml(unittest.TestCase):
                          ["啦啦", "啦"])
 
 
+class TestDiagnostics(unittest.TestCase):
+    def test_error_has_line_column_caret_and_hint(self):
+        from mpp.parser import DslError, parse_text
+        with self.assertRaises(DslError) as ctx:
+            parse_text("Key:C Tiem:4/4\n1 2 3 4 |")
+        exc = ctx.exception
+        self.assertEqual((exc.line, exc.column), (1, 7))
+        self.assertEqual(exc.suggestion, "Time:")
+        text = str(exc)
+        self.assertIn("Line 1, column 7", text)
+        self.assertIn("Tiem:4/4", text)
+        self.assertIn("^", text)
+        self.assertIn("did you mean 'Time:'", text)
+
+    def test_unclosed_chord_has_specific_message(self):
+        from mpp.parser import DslError, parse_text
+        with self.assertRaises(DslError) as ctx:
+            parse_text("Key:C Time:4/4\n[C 1 2 3 |")
+        self.assertIn("missing a closing ']'", ctx.exception.message)
+        self.assertEqual(ctx.exception.line, 2)
+
+    def test_unknown_key_suggests_nearest(self):
+        from mpp import musicxml
+        from mpp.parser import DslError, parse_text
+        with self.assertRaises(DslError) as ctx:
+            musicxml.to_musicxml(parse_text("Key:H Time:4/4\n1 2 3 |"))
+        self.assertEqual(ctx.exception.line, 1)
+        self.assertEqual(ctx.exception.suggestion, "C")
+        self.assertIn("did you mean 'C'", str(ctx.exception))
+
+    def test_edit_distance(self):
+        from mpp.diagnostics import did_you_mean, edit_distance
+        self.assertEqual(edit_distance("time", "tiem"), 2)
+        self.assertEqual(did_you_mean("Tiem", ["Key", "Time", "Tempo"]), "Time")
+
+
 class TestLilyPond(unittest.TestCase):
     def test_basic_shape(self):
         text = lilypond.generate(score_of("twinkle_chords.dsl"))
@@ -252,6 +288,92 @@ class TestLilyPond(unittest.TestCase):
         text = lilypond.generate(score_of("song_full.dsl"))
         self.assertIn('\\new Lyrics = "lyrics1"', text)
         self.assertIn("\\set stanza = #\"1.\"", text)
+
+
+class TestTranspose(unittest.TestCase):
+    def test_key_and_melody_follow(self):
+        from mpp.transpose import transpose_score
+        score = parse_text("Key:C Time:4/4\n1 2 3 4 |")
+        transpose_score(score, "D")
+        root = ET.fromstring(musicxml.to_musicxml(score))
+        self.assertEqual(root.findtext(".//fifths"), "2")
+        got = []
+        for note in root.findall(".//note"):
+            p = note.find("pitch")
+            got.append((p.findtext("step"), int(p.findtext("alter") or 0),
+                        p.findtext("octave")))
+        # 简谱音级是首调的：D 大调 1 2 3 4 = D4 E4 F#4 G4
+        self.assertEqual(got, [("D", 0, "4"), ("E", 0, "4"),
+                               ("F", 1, "4"), ("G", 0, "4")])
+
+    def test_chord_roots_follow_degree(self):
+        from mpp.transpose import transpose_score
+        score = parse_text("Key:C Time:4/4\n[C] 1 [G7] 1 [Am] 1 [F] 1 [Dm] 1 |")
+        transpose_score(score, "D")
+        got = [n.chord for m in score.measures for n in m.notes]
+        self.assertEqual(got, ["D", "A7", "Bm", "G", "Em"])
+
+    def test_spelling_follows_target_key(self):
+        from mpp.transpose import transpose_score
+        score = parse_text("Key:C Time:4/4\n[F] 1 [E] 1 [C] 1 |")
+        transpose_score(score, "Db")
+        # Db 调里 pc6=Gb、pc5=F、pc1=Db（不是 F#/E#/C#）
+        got = [n.chord for m in score.measures for n in m.notes]
+        self.assertEqual(got, ["Gb", "F", "Db"])
+
+    def test_spelling_in_sharp_key(self):
+        from mpp.transpose import transpose_score
+        score = parse_text("Key:C Time:4/4\n[F] 1 [E] 1 [C] 1 |")
+        transpose_score(score, "C#")
+        # C# 大调：IV 级是 F#，III 级是 E#，I 级是 C#
+        got = [n.chord for m in score.measures for n in m.notes]
+        self.assertEqual(got, ["F#", "E#", "C#"])
+
+    def test_slash_chord(self):
+        from mpp.transpose import transpose_score
+        score = parse_text("Key:C Time:4/4\n[C/E] 1 |")
+        transpose_score(score, "D")
+        self.assertEqual(score.measures[0].notes[0].chord, "D/F#")
+
+    def test_minor_transpose(self):
+        from mpp.transpose import transpose_score
+        score = parse_text("Key:Am Time:4/4\n[C] 1 [E7] 1 |")
+        transpose_score(score, "Em")        # A -> E, shift +7 半音
+        got = [n.chord for m in score.measures for n in m.notes]
+        self.assertEqual(got, ["G", "B7"])
+
+    def test_unknown_target_key_rejected(self):
+        from mpp.transpose import transpose_score
+        score = parse_text("Key:C Time:4/4\n[C] 1 |")
+        with self.assertRaises(ValueError):
+            transpose_score(score, "H")
+
+    def test_cli_transpose_musicxml(self):
+        import subprocess
+        tmp = os.path.join(HERE, "out", "tmp")
+        os.makedirs(tmp, exist_ok=True)
+        target = os.path.join(tmp, "transposed.musicxml")
+        out = subprocess.run([sys.executable, os.path.join(ROOT, "mpp.py"),
+                              os.path.join(FIXTURES, "twinkle_chords.dsl"),
+                              "-f", "musicxml", "--transpose", "Bb", "-o", target],
+                             capture_output=True, text=True, encoding="utf-8")
+        self.assertEqual(out.returncode, 0, out.stderr)
+        root = ET.parse(target).getroot()
+        self.assertEqual(root.findtext(".//fifths"), "-2")
+        # 原谱 Key:G，前四个和弦 C / G7 / Am / D7 → Bb 调的 Eb / Bb7 / Cm / F7
+        harmonies = root.findall(".//harmony")
+
+        def chord_roots(items):
+            out = []
+            for h in items:
+                step = h.findtext("root/root-step")
+                alter = int(h.findtext("root/root-alter") or 0)
+                out.append(step + ("#" * alter if alter > 0 else "b" * -alter))
+            return out
+
+        self.assertEqual(chord_roots(harmonies)[:4], ["Eb", "Bb", "C", "F"])
+        kinds = [h.find("kind").get("text") for h in harmonies]
+        self.assertEqual(kinds[:4], [None, "7", "m", "7"])
 
 
 class TestCli(unittest.TestCase):
