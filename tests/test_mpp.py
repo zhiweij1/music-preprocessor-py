@@ -249,7 +249,7 @@ class TestLayoutOptions(unittest.TestCase):
         out = subprocess.run([sys.executable, os.path.join(ROOT, "mpp.py"), "--help"],
                              capture_output=True, text=True, encoding="utf-8")
         self.assertIn("--auto-break", out.stdout)
-        self.assertIn("--chord-left", out.stdout)
+        self.assertIn("--min-measure-width", out.stdout)
 
 
 class TestDiagnostics(unittest.TestCase):

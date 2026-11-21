@@ -49,7 +49,7 @@ On Windows you can also download the standalone `mpp.exe` from the **Nightly** r
 | `-o, --output` | output path (single format only) |
 | `-t, --transpose` | transpose to `KEY` (e.g. `D`, `Bb`, `F#m`); jianpu degrees stay, chord roots shift by interval |
 | `--auto-break` | let MuseScore decide system breaks instead of using DSL line breaks |
-| `--chord-left` | shift chord symbols so the root letter sits over the note (default: centred) |
+| `--min-measure-width N` | with `--auto-break`, bars-per-line density (sp, default 8; larger = fewer bars) |
 | `--musescore` | path to `MuseScore4.exe` |
 | `--style` | MuseScore style file, defaults to `assets/jazz-lead-sheet.mss` |
 | `--no-style` | don't apply the lead-sheet style |

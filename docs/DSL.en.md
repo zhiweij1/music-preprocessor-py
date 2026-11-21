@@ -385,7 +385,7 @@ python mpp.py song.dsl -f musicxml        # MusicXML
 python mpp.py song.dsl -f ly              # LilyPond source (legacy, stdout)
 python mpp.py song.dsl --transpose Bb -f pdf  # transpose to Bb, then engrave
 python mpp.py song.dsl --auto-break -f pdf   # let MuseScore decide line breaks
-python mpp.py song.dsl --chord-left -f pdf   # root letter over the note (default: centred)
+python mpp.py song.dsl --auto-break --min-measure-width 18 -f pdf  # fewer bars per line
 ```
 
 On Windows you can also use `mpp.cmd song.dsl -f pdf`.
@@ -397,14 +397,15 @@ Chord suffixes (`m7`, `maj7`, `6/9`, ...) are preserved. `KEY` uses the same nam
 section 3.
 
 `--auto-break` ignores source line breaks and lets MuseScore decide how many bars fit
-per system (by default, source lines become systems). `--chord-left` shifts chord symbols
-left by about half a symbol so the root letter sits roughly over the note (by default the
-symbol's centre is over the note). Both affect MuseScore output (`.mscz` / `.pdf` /
-`.png`) only — not `-f musicxml` or the legacy `-f ly`.
+per system (by default, source lines become systems). Pair it with
+`--min-measure-width N` (in sp, default 8) to tune density: larger values mean fewer
+bars per line. For example, 12 bars fit on 2 lines (6 each) at the default, but on
+3 lines (4+5+3) at 18. Both affect MuseScore output (`.mscz` / `.pdf` / `.png`) only —
+not `-f musicxml` or the legacy `-f ly`.
 
 The gap between the title block and the first staff is compact by default; actual font
 sizes come from the style file and are unchanged.
 
 Options: `-f` (`mscz` (default) | `pdf` | `png` | `musicxml` | `ly`, comma-separated),
-`-o`, `-t`/`--transpose`, `--auto-break`, `--chord-left`, `--musescore`, `--style`,
+`-o`, `-t`/`--transpose`, `--auto-break`, `--min-measure-width`, `--musescore`, `--style`,
 `--no-style`, `--keep-xml`, `-q`.
