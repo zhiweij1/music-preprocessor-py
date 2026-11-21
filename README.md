@@ -116,7 +116,9 @@ The server is pure standard library — no pip dependencies.
 OpenSheetMusicDisplay, and offers two actions: print/save as PDF, or download MusicXML
 (open it in MuseScore to save as `.mscz`). `web/sync_mpp.py` copies the needed modules
 from `mpp/` into `web/mpp/` at deploy time — there is only one copy of the source.
-To enable: repository Settings → Pages → Source = GitHub Actions.
+Title/subtitle/poet/composer are drawn in HTML (OSMD does not render MusicXML credits),
+with a compact gap. On-page controls toggle automatic vs DSL line breaks and tune
+bar width. To enable: repository Settings → Pages → Source = GitHub Actions.
 
 ## Typography
 

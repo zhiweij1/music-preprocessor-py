@@ -40,6 +40,10 @@
         <label for="dsl-input">简谱 DSL</label>
         <textarea id="dsl-input" spellcheck="false" autocomplete="off"></textarea>
       </div>
+      <div class="layout-options">
+        <label><input type="checkbox" id="respect-breaks"> 按 DSL 换行（默认由浏览器自动排版）</label>
+        <label>小节宽度 <input type="number" id="measure-width" min="4" max="40" step="1" value="0" title="0=自动；越大每行小节越少"></label>
+      </div>
       <button id="convert-btn" class="primary" disabled>生成谱面</button>
       <div class="actions">
         <button id="pdf-btn" disabled>打开 PDF</button>
@@ -49,6 +53,12 @@
     </section>
 
     <section class="preview">
+      <div id="sheet-header">
+        <div id="sheet-title"></div>
+        <div id="sheet-subtitle"></div>
+        <div id="sheet-composer"></div>
+        <div id="sheet-poet"></div>
+      </div>
       <div id="score"></div>
     </section>
   </main>

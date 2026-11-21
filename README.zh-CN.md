@@ -109,6 +109,8 @@ npx vsce package
 `mpp` 解析器**（无后端、文本不上传），用 OpenSheetMusicDisplay 渲染谱面，提供两个操作：
 打印/另存为 PDF，或下载 MusicXML（用 MuseScore 打开可另存为 `.mscz`）。部署时
 `web/sync_mpp.py` 会把所需模块从 `mpp/` 复制到 `web/mpp/`——源码只有一份。
+标题/副标题/词曲由页面用 HTML 绘制（OSMD 不渲染 MusicXML 的 credit），距离紧凑；
+页面上的「按 DSL 换行」开关可切换自动排版与按源文件换行，「小节宽度」可调每行松紧。
 启用方式：仓库 Settings → Pages → Source 选 GitHub Actions。
 
 ## 版式
