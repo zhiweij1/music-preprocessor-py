@@ -119,16 +119,17 @@ The server is pure standard library — no pip dependencies.
 
 `web/` is a static single-page **Lead Sheet** generator deployed to GitHub Pages. It runs
 the **same `mpp` parser** in the browser via Pyodide (no server, no upload), renders the
-result with OpenSheetMusicDisplay, and offers two actions: print/save as PDF, or download
+result with **Verovio**, and offers two actions: print/save as PDF, or download
 MusicXML (open it in MuseScore to save as `.mscz`). `web/sync_mpp.py` copies the needed
 modules from `mpp/` into `web/mpp/` at deploy time — there is only one copy of the source.
 
-Title/subtitle/poet/composer are drawn in HTML (OSMD does not render MusicXML credits),
-with a compact gap. On-page controls toggle automatic vs DSL line breaks and tune bar
-width. The DSL editor highlights syntax and reports errors live (same parser, with
-line/column and did-you-mean). Chords and lyrics use the **MuseJazz Text** face
-(bundled in `web/fonts/` under the SIL OFL, see `OFL.txt`) to match the MuseScore
-lead-sheet style; noteheads stay on VexFlow's Gonville, which has no jazz glyph set.
+Title/subtitle/poet/composer are drawn in HTML, with a compact gap. The on-page control
+toggles automatic vs DSL line breaks. The DSL editor highlights syntax and reports errors
+live (same parser, with line/column and did-you-mean).
+
+Jazz look: Verovio engraves with the handwritten **Petaluma** music font; chord and
+lyric text are styled with **MuseJazz Text** (bundled in `web/fonts/` under the SIL OFL,
+see `OFL.txt`). Verovio is LGPL-3.0 and is loaded from a CDN at runtime.
 
 All three artifacts (Windows `mpp.exe`, VSCode `.vsix`, and the web page) are produced by
 **one** `nightly` workflow: daily at 20:00 Beijing time (12:00 UTC), skipped when there

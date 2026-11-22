@@ -111,15 +111,17 @@ npx vsce package     # 会自动执行 npm run build（esbuild 打包）
 ### 网页转换器
 
 `web/` 是部署到 GitHub Pages 的静态单页 **Lead Sheet** 生成器。它通过 Pyodide 在浏览器里
-跑**同一套 `mpp` 解析器**（无后端、文本不上传），用 OpenSheetMusicDisplay 渲染谱面，
+跑**同一套 `mpp` 解析器**（无后端、文本不上传），用 **Verovio** 渲染谱面，
 提供两个操作：打印/另存为 PDF，或下载 MusicXML（用 MuseScore 打开可另存为 `.mscz`）。
 部署时 `web/sync_mpp.py` 会把所需模块从 `mpp/` 复制到 `web/mpp/`——源码只有一份。
 
-标题/副标题/词曲由页面用 HTML 绘制（OSMD 不渲染 MusicXML 的 credit），距离紧凑；
-页面上的「按 DSL 换行」开关可切换自动排版与按源文件换行，「小节宽度」可调每行松紧。
-DSL 编辑器带语法高亮和实时报错（同一套解析器，出行列号和 did-you-mean）。
-和弦和歌词使用 **MuseJazz Text** 字体（随附在 `web/fonts/`，SIL OFL 许可，见 `OFL.txt`），
-以贴近 MuseScore 的 lead sheet 观感；音符符头仍是 VexFlow 的 Gonville（它没有爵士字形）。
+标题/副标题/词曲由页面用 HTML 绘制，距离紧凑；页面上的「按 DSL 换行」开关可切换
+自动排版与按源文件换行。DSL 编辑器带语法高亮和实时报错（同一套解析器，出行列号和
+did-you-mean）。
+
+爵士风格：Verovio 使用手写体 **Petaluma** 音乐字形（谱号/符头/休止符/拍号）；
+和弦和歌词文本用 **MuseJazz Text**（随附在 `web/fonts/`，SIL OFL 许可，见 `OFL.txt`）。
+Verovio 为 LGPL-3.0 许可，运行时从 CDN 加载。
 
 三个产物（Windows `mpp.exe`、VSCode `.vsix`、网页）由**同一个** `nightly` 工作流产出：
 每天北京时间 20:00（UTC 12:00）触发，没有新 commit 就跳过，网页只在 release 发布后
