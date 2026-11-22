@@ -122,8 +122,11 @@ jobs:
       - name: Sync mpp sources into web/
         run: python web/sync_mpp.py
       - uses: actions/configure-pages@v6
-      - uses: actions/upload-pages-artifact@v5
+      # upload-pages-artifact@v5 (upload-artifact v7) is not readable by
+      # deploy-pages@v5: the artifact exists but deploy reports "No artifacts
+      # named github-pages". Stay on the verified v3 + v4 pair.
+      - uses: actions/upload-pages-artifact@v3
         with:
           path: web
       - id: deployment
-        uses: actions/deploy-pages@v5
+        uses: actions/deploy-pages@v4
