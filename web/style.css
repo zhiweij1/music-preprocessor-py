@@ -107,9 +107,20 @@ button.primary:hover:not(:disabled) { background: var(--accent-hover); }
 #sheet-subtitle:not(:empty) { font-size: 13px; color: #555; margin-top: 2px; }
 #sheet-composer { text-align: right; font-size: 11px; min-height: 14px; }
 #sheet-poet { text-align: left; font-size: 11px; min-height: 14px; margin-top: -14px; }
+/* Tempo sits at the bottom of the header block, just above the chord row.
+   Verovio's own tempo placement is wrong (below the chords), so hide it. */
+#sheet-tempo:not(:empty) { text-align: left; font-size: 13px; min-height: 16px; padding-bottom: 2px; }
+#score svg g.tempo { display: none; }
 #score { width: 100%; background: #fff; }
 /* Verovio emits a viewBox-only <svg>; scale it to the container width. */
 #score svg { width: 100%; height: auto; display: block; }
+/* Petaluma's time-signature digits look oversized next to the handwritten
+   glyphs; shrink the whole meterSig group around its own centre. */
+#score svg g.meterSig {
+  transform: scale(0.8);
+  transform-box: fill-box;
+  transform-origin: center;
+}
 /* Verovio draws chord/lyric text without font-family; overlay MuseJazz Text. */
 #score svg g.harm text { font-family: "MuseJazz Text", Georgia, serif !important; }
 #score svg g.verse text,

@@ -115,9 +115,9 @@ npx vsce package     # 会自动执行 npm run build（esbuild 打包）
 提供两个操作：打印/另存为 PDF，或下载 MusicXML（用 MuseScore 打开可另存为 `.mscz`）。
 部署时 `web/sync_mpp.py` 会把所需模块从 `mpp/` 复制到 `web/mpp/`——源码只有一份。
 
-标题/副标题/词曲由页面用 HTML 绘制，距离紧凑；页面上的「按 DSL 换行」开关可切换
-自动排版与按源文件换行。DSL 编辑器带语法高亮和实时报错（同一套解析器，出行列号和
-did-you-mean）。
+标题/副标题/词曲/速度标记由页面用 HTML 绘制，距离紧凑（Verovio 自己的速度标记位置
+在和弦之下，SVG 里的那份已隐藏）；页面上的「按 DSL 换行」开关可切换自动排版与按源
+文件换行。DSL 编辑器带语法高亮和实时报错（同一套解析器，出行列号和 did-you-mean）。
 
 爵士风格：Verovio 使用手写体 **Petaluma** 音乐字形（谱号/符头/休止符/拍号）；
 和弦和歌词文本用 **MuseJazz Text**（随附在 `web/fonts/`，SIL OFL 许可，见 `OFL.txt`）。

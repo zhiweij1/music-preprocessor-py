@@ -123,9 +123,10 @@ result with **Verovio**, and offers two actions: print/save as PDF, or download
 MusicXML (open it in MuseScore to save as `.mscz`). `web/sync_mpp.py` copies the needed
 modules from `mpp/` into `web/mpp/` at deploy time — there is only one copy of the source.
 
-Title/subtitle/poet/composer are drawn in HTML, with a compact gap. The on-page control
-toggles automatic vs DSL line breaks. The DSL editor highlights syntax and reports errors
-live (same parser, with line/column and did-you-mean).
+Title/subtitle/poet/composer **and the tempo mark** are drawn in HTML, with a compact
+gap (Verovio places its own tempo below the chord row, so the SVG copy is hidden). The
+on-page control toggles automatic vs DSL line breaks. The DSL editor highlights syntax
+and reports errors live (same parser, with line/column and did-you-mean).
 
 Jazz look: Verovio engraves with the handwritten **Petaluma** music font; chord and
 lyric text are styled with **MuseJazz Text** (bundled in `web/fonts/` under the SIL OFL,
