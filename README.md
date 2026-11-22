@@ -125,7 +125,8 @@ modules from `mpp/` into `web/mpp/` at deploy time — there is only one copy of
 
 Title/subtitle/poet/composer are drawn in HTML (OSMD does not render MusicXML credits),
 with a compact gap. On-page controls toggle automatic vs DSL line breaks and tune bar
-width.
+width. The DSL editor highlights syntax and reports errors live (same parser, with
+line/column and did-you-mean).
 
 All three artifacts (Windows `mpp.exe`, VSCode `.vsix`, and the web page) are produced by
 **one** `nightly` workflow: daily at 20:00 Beijing time (12:00 UTC), skipped when there
