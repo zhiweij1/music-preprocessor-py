@@ -155,12 +155,20 @@ function showMessages(diagnostics) {
   }
 }
 
-function renderSheetHeader(headers) {
+function formatTempo(raw) {
+  const m = /^([1-8])=(\d+)$/.exec(raw || '');
+  if (!m) return raw || '';
+  const glyphs = { '1': '𝅝', '2': '𝅗𝅥', '4': '♩', '8': '𝅘𝅥𝅮' };
+  return `${glyphs[m[1]] || m[1]} = ${m[2]}`;
+}
+
+function renderSheetHeader(headers, tempo) {
   $('sheet-title').textContent = headers.Title || '';
   const sub = [headers.Subtitle, headers.Subsubtitle].filter(Boolean).join(' · ');
   $('sheet-subtitle').textContent = sub;
   $('sheet-composer').textContent = headers.Composer || '';
   $('sheet-poet').textContent = headers.Poet || '';
+  $('sheet-tempo').textContent = formatTempo(tempo);
 }
 
 function applyVerovioOptions() {
@@ -233,7 +241,7 @@ if __key:
     transpose_score(_score, __key)
 _xml = musicxml.to_musicxml(_score, auto_break=not __respect_breaks)
 _headers = {k: _score.headers[k] for k in ('Title','Subtitle','Subsubtitle','Composer','Poet') if k in _score.headers}
-_json.dumps({'xml': _xml, 'headers': _headers, 'warnings': list(_score.warnings)})
+_json.dumps({'xml': _xml, 'headers': _headers, 'tempo': _score.tempo or '', 'warnings': list(_score.warnings)})
     `);
     const payload = JSON.parse(result);
     pyodide.globals.delete('__source');
@@ -241,7 +249,7 @@ _json.dumps({'xml': _xml, 'headers': _headers, 'warnings': list(_score.warnings)
     pyodide.globals.delete('__respect_breaks');
 
     lastXml = payload.xml;
-    renderSheetHeader(payload.headers || {});
+    renderSheetHeader(payload.headers || {}, payload.tempo);
     const diagnostics = payload.warnings.map((w) => ({ severity: 'warning', message: w }));
     showMessages(diagnostics);
 
@@ -280,6 +288,8 @@ function openPdf() {
 #sheet-header{text-align:center;padding:6px 0 2px}#sheet-title:not(:empty){font-size:26px;font-weight:600}
 #sheet-subtitle:not(:empty){font-size:13px;color:#555}#sheet-composer{text-align:right;font-size:11px;min-height:14px}
 #sheet-poet{text-align:left;font-size:11px;min-height:14px;margin-top:-14px}
+#sheet-tempo:not(:empty){text-align:left;font-size:13px;min-height:16px}
+svg g.tempo{display:none}
 svg{width:100%;height:auto}</style>
 </head><body>${header}${svg}<script>window.addEventListener('load',()=>setTimeout(()=>window.print(),400))<\/script>
 </body></html>`);
