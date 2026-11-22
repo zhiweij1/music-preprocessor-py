@@ -79,6 +79,11 @@ jobs:
         working-directory: editors/vscode
         run: npm install
 
+      - name: Build extension bundle
+        if: steps.gate.outputs.skip != 'true'
+        working-directory: editors/vscode
+        run: npm run build
+
       - name: Package .vsix
         if: steps.gate.outputs.skip != 'true'
         working-directory: editors/vscode

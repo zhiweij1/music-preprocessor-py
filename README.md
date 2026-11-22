@@ -105,8 +105,12 @@ of keys, declarations and chord names. Build/install it with:
 ```bash
 cd editors/vscode
 npm install
-npx vsce package
+npx vsce package     # runs `npm run build` (esbuild bundle) automatically
 ```
+
+Packaging bundles `extension.js` and its npm dependencies into `dist/extension.js`
+and copies the Python server plus the `mpp` modules into `dist/`, so the installed
+extension is self-contained (~16 files, ~106 KB).
 
 Set `jianpu.pythonPath` to a Python 3.9+ interpreter if `python` is not on PATH.
 The server is pure standard library — no pip dependencies.

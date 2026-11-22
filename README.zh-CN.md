@@ -100,8 +100,11 @@ did-you-mean）、调名/声明/和弦的基础补全。构建安装：
 ```bash
 cd editors/vscode
 npm install
-npx vsce package
+npx vsce package     # 会自动执行 npm run build（esbuild 打包）
 ```
+
+打包时会把 `extension.js` 和 npm 依赖压成 `dist/extension.js`，并把 Python server
+和 `mpp` 模块复制进 `dist/`，所以安装后的插件是自包含的（约 16 个文件 / 106 KB）。
 
 如果 `python` 不在 PATH 上，设置 `jianpu.pythonPath` 指向 Python 3.9+。LSP server 纯标准库，无需 pip 依赖。
 
