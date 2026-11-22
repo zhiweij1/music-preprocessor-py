@@ -1,3 +1,11 @@
+@font-face {
+  font-family: "MuseJazz Text";
+  src: url("fonts/MuseJazzText.otf") format("opentype");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 * { box-sizing: border-box; }
 :root {
   --bg: #f4f5f7;
@@ -94,7 +102,7 @@ button.primary:hover:not(:disabled) { background: var(--accent-hover); }
 .messages .warn { color: var(--warn); white-space: pre-wrap; }
 
 .preview { overflow: auto; align-items: stretch; }
-#sheet-header { text-align: center; font-family: Georgia, "Songti SC", serif; color: #1f2430; padding: 10px 0 4px; }
+#sheet-header { text-align: center; font-family: "MuseJazz Text", Georgia, "Songti SC", "Microsoft YaHei", serif; color: #1f2430; padding: 10px 0 4px; }
 #sheet-title:not(:empty) { font-size: 26px; font-weight: 600; line-height: 1.25; }
 #sheet-subtitle:not(:empty) { font-size: 13px; color: #555; margin-top: 2px; }
 #sheet-composer { text-align: right; font-size: 11px; min-height: 14px; }
