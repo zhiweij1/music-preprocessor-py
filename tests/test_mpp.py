@@ -87,6 +87,23 @@ class TestParsing(unittest.TestCase):
         with self.assertRaises(ValueError):
             musicxml.to_musicxml(parse_text("Key:H Time:4/4\n1"))
 
+    def test_lyric_line_ignores_trailing_comment(self):
+        score = parse_text("Key:C Time:4/4\n1 2 3 4 |\nH: 一闪一闪 % 这是注释\n")
+        self.assertEqual(score.lyrics[0].text, "一闪一闪")
+
+    def test_lyric_line_ignores_comment_without_space(self):
+        score = parse_text("Key:C Time:4/4\n1 2 3 4 |\nH:一闪一闪%注释\n")
+        self.assertEqual(score.lyrics[0].text, "一闪一闪")
+
+    def test_metadata_ignores_trailing_comment(self):
+        score = parse_text("Title:小星星 % 注释\nKey:C Time:4/4\n1 2 3 4 |\n")
+        self.assertEqual(score.headers["Title"], "小星星")
+
+    def test_lyric_comment_not_rendered(self):
+        root = xml_of_text("Key:C Time:4/4\n1 2 3 4 |\nH: 一闪一闪 % 注释\n")
+        texts = [l.findtext("text") for l in root.findall(".//lyric")]
+        self.assertEqual(texts, ["一", "闪", "一", "闪"])
+
 
 class TestMusicXml(unittest.TestCase):
     def test_key_signature_and_pitch(self):
