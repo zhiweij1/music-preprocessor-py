@@ -2,6 +2,8 @@
 
 **English** · [简体中文](README.zh-CN.md)
 
+🔗 **Online Lead Sheet generator (no install):** https://zhiweij1.github.io/music-preprocessor-py/
+
 Turn a plain-text jianpu (numbered notation) DSL into a **MuseScore 4** lead sheet —
 `.mscz`, `.pdf` or `.png` — through standard MusicXML.
 

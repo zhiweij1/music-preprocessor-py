@@ -2,6 +2,8 @@
 
 [English](README.md) · **简体中文**
 
+🔗 **在线生成 Lead Sheet（免安装）**：https://zhiweij1.github.io/music-preprocessor-py/
+
 把纯文本的简谱 DSL 转成 **MuseScore 4** 的 lead sheet —— `.mscz`、`.pdf` 或 `.png`，
 中间走标准的 MusicXML。
 
