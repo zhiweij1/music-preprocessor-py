@@ -37,7 +37,10 @@
       </div>
       <div class="field grow">
         <label for="dsl-input">简谱 DSL</label>
-        <textarea id="dsl-input" spellcheck="false" autocomplete="off"></textarea>
+        <div class="editor-wrap">
+          <pre id="highlight" aria-hidden="true"></pre>
+          <textarea id="dsl-input" spellcheck="false" autocomplete="off" wrap="soft"></textarea>
+        </div>
       </div>
       <div class="layout-options">
         <label><input type="checkbox" id="respect-breaks"> 按 DSL 换行（默认由浏览器自动排版）</label>

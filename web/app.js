@@ -17,6 +17,7 @@ const $ = (id) => document.getElementById(id);
 const statusEl = $('status');
 const messagesEl = $('messages');
 const dslInput = $('dsl-input');
+const highlightEl = $('highlight');
 const keySelect = $('key-select');
 const convertBtn = $('convert-btn');
 const pdfBtn = $('pdf-btn');
@@ -27,6 +28,118 @@ const measureWidth = $('measure-width');
 let pyodide = null;
 let osmd = null;
 let lastXml = '';
+let errorLine = 0;
+let diagTimer = null;
+
+/* ---- syntax highlighting (mirrors the VSCode TextMate grammar) ---- */
+const DECL_NAMES = new Set([
+  'Title', 'Subtitle', 'Subsubtitle', 'Composer', 'Poet', 'Instrument',
+  'Arranger', 'Copyright', 'Key', 'Time', 'Tempo',
+]);
+const LYRIC_RE = /^\s*[HL]\d*:/;
+const CHORD_RE = /^\[[^\]]*\]$/;
+const BAR_RE = /^(\|\||\|\.|\.\||\|:|:\||\||:)$/;
+const NOTE_RE = /^[qQsSdDcChH]?(?:#|b)?[0-9xX]['+,.]*$/;
+const DECL_RE = /^([A-Za-z]+):(.*)$/;
+
+function escapeHtml(text) {
+  return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function highlightToken(part) {
+  if (!part) return '';
+  if (/^\s+$/.test(part)) return escapeHtml(part);
+  const decl = DECL_RE.exec(part);
+  if (decl && DECL_NAMES.has(decl[1])) {
+    return `<span class="tok-key">${escapeHtml(decl[1] + ':')}</span>${escapeHtml(decl[2])}`;
+  }
+  if (CHORD_RE.test(part)) return `<span class="tok-chord">${escapeHtml(part)}</span>`;
+  if (BAR_RE.test(part)) return `<span class="tok-bar">${escapeHtml(part)}</span>`;
+  if (NOTE_RE.test(part)) return `<span class="tok-note">${escapeHtml(part)}</span>`;
+  return escapeHtml(part);
+}
+
+function highlightLine(line) {
+  const pct = line.indexOf('%');
+  const code = pct >= 0 ? line.slice(0, pct) : line;
+  const comment = pct >= 0 ? line.slice(pct) : '';
+  let html;
+  if (LYRIC_RE.test(code)) {
+    html = `<span class="tok-lyric">${escapeHtml(code)}</span>`;
+  } else {
+    html = code.split(/(\s+)/).map(highlightToken).join('');
+  }
+  if (comment) html += `<span class="tok-comment">${escapeHtml(comment)}</span>`;
+  return html;
+}
+
+function renderHighlight() {
+  const lines = dslInput.value.split('\n');
+  highlightEl.innerHTML = lines
+    .map((line, i) => {
+      const cls = i + 1 === errorLine ? 'hl-line err' : 'hl-line';
+      return `<div class="${cls}">${highlightLine(line)}</div>`;
+    })
+    .join('');
+  syncScroll();
+}
+
+function syncScroll() {
+  highlightEl.scrollTop = dslInput.scrollTop;
+  highlightEl.scrollLeft = dslInput.scrollLeft;
+}
+
+/* ---- live diagnostics: parse only, no engraving ---- */
+function scheduleDiagnostics() {
+  clearTimeout(diagTimer);
+  diagTimer = setTimeout(runDiagnostics, 300);
+}
+
+async function runDiagnostics() {
+  if (!pyodide) return;
+  let result;
+  try {
+    pyodide.globals.set('__source', dslInput.value);
+    result = pyodide.runPython(`
+import json as _json
+try:
+    _score = parse_text(__source)
+    _xml = musicxml.to_musicxml(_score)
+    _json.dumps({'error': None, 'warnings': list(_score.warnings)})
+except Exception as _exc:
+    _json.dumps({'error': {
+        'line': getattr(_exc, 'line', 0) or 0,
+        'column': getattr(_exc, 'column', 0) or 0,
+        'message': getattr(_exc, 'message', None) or str(_exc).split('\\n')[0],
+        'suggestion': getattr(_exc, 'suggestion', '') or '',
+    }, 'warnings': []})
+    `);
+  } catch (err) {
+    errorLine = 0;
+    showMessages([{ severity: 'error', message: String(err.message || err) }]);
+    renderHighlight();
+    return;
+  } finally {
+    try { pyodide.globals.delete('__source'); } catch (_) { /* ignore */ }
+  }
+  const payload = JSON.parse(result);
+  errorLine = payload.error ? payload.error.line : 0;
+  const diagnostics = [];
+  if (payload.error) {
+    let message = payload.error.message;
+    if (payload.error.suggestion) message += ` — did you mean '${payload.error.suggestion}'?`;
+    if (payload.error.line) {
+      const column = payload.error.column ? `, column ${payload.error.column}` : '';
+      message = `Line ${payload.error.line}${column}: ${message}`;
+    }
+    diagnostics.push({ severity: 'error', message });
+  }
+  for (const warning of payload.warnings) {
+    diagnostics.push({ severity: 'warning', message: warning });
+  }
+  showMessages(diagnostics);
+  renderHighlight();
+}
 
 function setStatus(text, kind) {
   statusEl.textContent = text;
@@ -118,11 +231,16 @@ _json.dumps({'xml': _xml, 'headers': _headers, 'warnings': list(_score.warnings)
     osmd.render();
     pdfBtn.disabled = false;
     downloadBtn.disabled = false;
+    if (errorLine) { errorLine = 0; renderHighlight(); }
   } catch (err) {
-    const message = String(err.message || err).split('\n').filter(Boolean).slice(-1)[0];
-    showMessages([{ severity: 'error', message: message }]);
     pdfBtn.disabled = true;
     downloadBtn.disabled = true;
+    try {
+      await runDiagnostics();   // structured error with line/column
+    } catch (_) {
+      const message = String(err.message || err).split('\n').filter(Boolean).slice(-1)[0];
+      showMessages([{ severity: 'error', message: message }]);
+    }
   }
 }
 
@@ -160,6 +278,12 @@ function downloadXml() {
 
 (async function main() {
   dslInput.value = DEMO;
+  renderHighlight();
+  dslInput.addEventListener('input', () => {
+    renderHighlight();
+    scheduleDiagnostics();
+  });
+  dslInput.addEventListener('scroll', syncScroll);
   convertBtn.addEventListener('click', convert);
   keySelect.addEventListener('change', convert);
   respectBreaks.addEventListener('change', convert);

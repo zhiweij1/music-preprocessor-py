@@ -35,9 +35,51 @@ main { flex: 1; display: grid; grid-template-columns: minmax(340px, 40%) 1fr; ga
 .field { display: flex; flex-direction: column; gap: 6px; }
 .field.grow { flex: 1; min-height: 0; }
 .field label { font-size: 12px; font-weight: 600; color: var(--muted); }
-select, textarea { font: inherit; border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; background: #fff; color: var(--ink); }
-select { max-width: 260px; }
-textarea { flex: 1; resize: none; font-family: ui-monospace, "Cascadia Code", Consolas, monospace; font-size: 13px; line-height: 1.6; tab-size: 2; }
+select { font: inherit; border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; background: #fff; color: var(--ink); max-width: 260px; }
+
+/* ---- code editor: transparent textarea over a highlighted <pre> ---- */
+.editor-wrap { position: relative; flex: 1; min-height: 0; }
+.editor-wrap > textarea,
+.editor-wrap > pre {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  tab-size: 2;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+}
+.editor-wrap > pre {
+  background: #fff;
+  color: var(--ink);
+  overflow-y: scroll;          /* keep the same content width as the textarea */
+  scrollbar-width: none;
+  pointer-events: none;
+}
+.editor-wrap > pre::-webkit-scrollbar { width: 0; height: 0; }
+.editor-wrap > textarea {
+  background: transparent;
+  color: transparent;
+  caret-color: var(--ink);
+  resize: none;
+  overflow-y: scroll;
+}
+.editor-wrap > textarea:focus { outline: none; border-color: var(--accent); }
+.editor-wrap > textarea::selection { background: rgba(47, 111, 235, .22); }
+
+.hl-line { min-height: 1.6em; }
+.hl-line.err { background: #fce8e6; border-radius: 3px; }
+.tok-comment { color: #9aa0a6; font-style: italic; }
+.tok-key { color: var(--accent); font-weight: 600; }
+.tok-chord { color: #8b3fb8; font-weight: 600; }
+.tok-lyric { color: #137333; }
+.tok-note { color: #b54708; }
+.tok-bar { color: #6b7280; }
 
 button { font: inherit; font-size: 13px; font-weight: 600; padding: 9px 14px; border: 1px solid var(--line); border-radius: 6px; background: #fff; color: var(--ink); cursor: pointer; }
 button:hover:not(:disabled) { background: #f0f2f5; }
