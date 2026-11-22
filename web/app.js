@@ -43,7 +43,17 @@ function showMessages(diagnostics) {
   }
 }
 
-function renderSheetHeader(headers) {
+function parseHeaders(dsl) {
+  const found = {};
+  for (const line of dsl.split(/\r?\n/)) {
+    const m = /^(Title|Subtitle|Subsubtitle|Composer|Poet):\s*(.*)$/.exec(line.trim());
+    if (m && !(m[1] in found)) found[m[1]] = m[2].trim();
+  }
+  return found;
+}
+
+function renderSheetHeader(dsl) {
+  const headers = parseHeaders(dsl);
   $('sheet-title').textContent = headers.Title || '';
   const sub = [headers.Subtitle, headers.Subsubtitle].filter(Boolean).join(' · ');
   $('sheet-subtitle').textContent = sub;
@@ -90,6 +100,7 @@ async function convert() {
   const source = dslInput.value;
   const key = keySelect.value;
   showMessages([]);
+  renderSheetHeader(source);
   try {
     pyodide.globals.set('__source', source);
     pyodide.globals.set('__key', key || null);
@@ -100,8 +111,7 @@ _score = parse_text(__source)
 if __key:
     transpose_score(_score, __key)
 _xml = musicxml.to_musicxml(_score, auto_break=not __respect_breaks)
-_headers = {k: _score.headers[k] for k in ('Title','Subtitle','Subsubtitle','Composer','Poet') if k in _score.headers}
-_json.dumps({'xml': _xml, 'headers': _headers, 'warnings': list(_score.warnings)})
+_json.dumps({'xml': _xml, 'warnings': list(_score.warnings)})
     `);
     const payload = JSON.parse(result);
     pyodide.globals.delete('__source');
@@ -109,7 +119,6 @@ _json.dumps({'xml': _xml, 'headers': _headers, 'warnings': list(_score.warnings)
     pyodide.globals.delete('__respect_breaks');
 
     lastXml = payload.xml;
-    renderSheetHeader(payload.headers || {});
     const diagnostics = payload.warnings.map((w) => ({ severity: 'warning', message: w }));
     showMessages(diagnostics);
 
