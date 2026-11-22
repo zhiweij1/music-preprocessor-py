@@ -175,9 +175,11 @@ function applyVerovioOptions() {
     adjustPageHeight: true,
     footer: 'none',
     header: 'none',
-    // 勾选「按 DSL 换行」时尊重源文件换行（MusicXML 里的 new-system），
+    // 输出 viewBox 而非固定像素尺寸，SVG 才能随容器宽度缩放。
+    svgViewBox: true,
+    // 勾选「按 DSL 换行」时尊重 MusicXML 里编码的 new-system 标记；
     // 否则交给 Verovio 按页宽自动排版。
-    breaks: respectBreaks.checked ? 'none' : 'auto',
+    breaks: respectBreaks.checked ? 'encoded' : 'auto',
   });
 }
 
