@@ -230,6 +230,28 @@ class TestMusicXml(unittest.TestCase):
                          ["啦啦", "啦"])
 
 
+class TestLayoutOptions(unittest.TestCase):
+    def test_auto_break_removes_system_breaks(self):
+        score = parse_text("Key:C Time:4/4\n1 2 3 4 | 5 6 7 1' |\n1' 7 6 5 |")
+        default = musicxml.to_musicxml(score)
+        auto = musicxml.to_musicxml(score, auto_break=True)
+        self.assertIn('<print new-system="yes"/>', default)
+        self.assertNotIn('new-system', auto)
+
+    def test_title_credit_uses_compact_font_size(self):
+        root = xml_of_text("Title:Test\nKey:C Time:4/4\n1 2 3 4 |")
+        fonts = [c.findtext("credit-type") and c.find("credit-words").get("font-size")
+                 for c in root.findall("credit")]
+        self.assertIn("14", fonts)
+
+    def test_cli_accepts_layout_flags(self):
+        import subprocess
+        out = subprocess.run([sys.executable, os.path.join(ROOT, "mpp.py"), "--help"],
+                             capture_output=True, text=True, encoding="utf-8")
+        self.assertIn("--auto-break", out.stdout)
+        self.assertIn("--min-measure-width", out.stdout)
+
+
 class TestDiagnostics(unittest.TestCase):
     def test_error_has_line_column_caret_and_hint(self):
         from mpp.parser import DslError, parse_text

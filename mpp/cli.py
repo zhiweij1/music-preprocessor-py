@@ -2,6 +2,7 @@
 """Command line interface for music-preprocessor (Python edition)."""
 import argparse
 import os
+import re
 import sys
 
 from . import __version__, lilypond, musicxml, musescore
@@ -23,6 +24,10 @@ def build_parser() -> argparse.ArgumentParser:
                    help="comma separated: mscz, pdf, png, musicxml, ly (default: mscz)")
     p.add_argument("-t", "--transpose", metavar="KEY",
                    help="transpose to KEY (e.g. D, Bb, F#m); chord roots follow the shift")
+    p.add_argument("--auto-break", action="store_true",
+                   help="let MuseScore decide line breaks (ignore DSL line breaks)")
+    p.add_argument("--min-measure-width", type=float, metavar="N",
+                   help="min bar width in sp for --auto-break (default 8; larger = fewer bars per line)")
     p.add_argument("--musescore", help="path to MuseScore4.exe")
     p.add_argument("--style", help="MuseScore style file (.mss)")
     p.add_argument("--no-style", action="store_true", help="do not apply the lead-sheet style")
@@ -97,7 +102,7 @@ def main(argv=None) -> int:
 
     # ---- MusicXML / MuseScore ------------------------------------------
     try:
-        xml_text = musicxml.to_musicxml(score)
+        xml_text = musicxml.to_musicxml(score, auto_break=args.auto_break)
     except ValueError as exc:
         print(f"Error: {exc}", file=sys.stderr)
         return 1
@@ -119,6 +124,24 @@ def main(argv=None) -> int:
     style = None
     if not args.no_style:
         style = args.style or (DEFAULT_STYLE if os.path.isfile(DEFAULT_STYLE) else None)
+
+    temp_style = None
+    if args.min_measure_width is not None and style:
+        # MuseScore packs more bars per line with smaller minMeasureWidth.
+        # Generate a temp style overriding it so --auto-break can be tuned.
+        with open(style, encoding="utf-8-sig") as fh:
+            style_text = fh.read()
+        style_text = re.sub(
+            r"<minMeasureWidth>.*?</minMeasureWidth>",
+            f"<minMeasureWidth>{args.min_measure_width:g}</minMeasureWidth>",
+            style_text)
+        folder = os.path.dirname(os.path.abspath(
+            args.output or f"{stem}.{formats[0]}"))
+        name = os.path.splitext(os.path.basename(args.output or stem))[0]
+        temp_style = os.path.join(folder, f".{name}.{os.getpid()}.width.mss")
+        with open(temp_style, "w", encoding="utf-8") as fh:
+            fh.write(style_text)
+        style = temp_style
 
     if args.keep_xml:
         base = os.path.splitext(args.output)[0] if args.output else stem
@@ -155,4 +178,6 @@ def main(argv=None) -> int:
     finally:
         if temp_xml and os.path.exists(xml_path):
             os.remove(xml_path)
+        if temp_style and os.path.exists(temp_style):
+            os.remove(temp_style)
     return 0

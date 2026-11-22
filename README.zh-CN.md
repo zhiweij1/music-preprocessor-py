@@ -46,6 +46,8 @@ Windows 上也可以从 **Nightly** release 下载独立的 `mpp.exe`（不需�
 | `-f, --format` | `mscz`（默认）\| `pdf` \| `png` \| `musicxml` \| `ly`（legacy），可逗号组合 |
 | `-o, --output` | 输出路径（只能配合单格式） |
 | `-t, --transpose` | 转到指定调（如 `D`、`Bb`、`F#m`）；简谱音级不变，和弦根音按级数平移 |
+| `--auto-break` | 换行交给 MuseScore 决定（默认按源文件换行分行） |
+| `--min-measure-width N` | 配合 `--auto-break` 控制每行松紧（sp，默认 8；越大每行小节越少） |
 | `--musescore` | 指定 `MuseScore4.exe` |
 | `--style` | MuseScore 样式文件，默认 `assets/jazz-lead-sheet.mss` |
 | `--no-style` | 不套 lead sheet 样式 |
@@ -107,6 +109,9 @@ npx vsce package
 跑**同一套 `mpp` 解析器**（无后端、文本不上传），用 OpenSheetMusicDisplay 渲染谱面，
 提供两个操作：打印/另存为 PDF，或下载 MusicXML（用 MuseScore 打开可另存为 `.mscz`）。
 部署时 `web/sync_mpp.py` 会把所需模块从 `mpp/` 复制到 `web/mpp/`——源码只有一份。
+
+标题/副标题/词曲由页面用 HTML 绘制（OSMD 不渲染 MusicXML 的 credit），距离紧凑；
+页面上的「按 DSL 换行」开关可切换自动排版与按源文件换行，「小节宽度」可调每行松紧。
 
 三个产物（Windows `mpp.exe`、VSCode `.vsix`、网页）由**同一个** `nightly` 工作流产出：
 每天北京时间 20:00（UTC 12:00）触发，没有新 commit 就跳过，网页只在 release 发布后

@@ -21,6 +21,8 @@ const keySelect = $('key-select');
 const convertBtn = $('convert-btn');
 const pdfBtn = $('pdf-btn');
 const downloadBtn = $('download-btn');
+const respectBreaks = $('respect-breaks');
+const measureWidth = $('measure-width');
 
 let pyodide = null;
 let osmd = null;
@@ -38,6 +40,31 @@ function showMessages(diagnostics) {
     div.className = d.severity === 'error' ? 'err' : 'warn';
     div.textContent = (d.severity === 'error' ? '✗ ' : '⚠ ') + d.message;
     messagesEl.appendChild(div);
+  }
+}
+
+function renderSheetHeader(headers) {
+  $('sheet-title').textContent = headers.Title || '';
+  const sub = [headers.Subtitle, headers.Subsubtitle].filter(Boolean).join(' · ');
+  $('sheet-subtitle').textContent = sub;
+  $('sheet-composer').textContent = headers.Composer || '';
+  $('sheet-poet').textContent = headers.Poet || '';
+}
+
+function applyEngravingRules() {
+  if (!osmd) return;
+  const rules = osmd.EngravingRules;
+  rules.NewSystemAtXMLNewSystemAttribute = respectBreaks.checked;
+  // OSMD ignores MusicXML credit rendering reliably; we draw the title in HTML.
+  rules.RenderTitle = false;
+  rules.RenderSubtitle = false;
+  rules.RenderComposer = false;
+  rules.RenderLyricist = false;
+  const width = parseFloat(measureWidth.value) || 0;
+  rules.FixedMeasureWidth = width > 0;
+  if (width > 0) {
+    rules.FixedMeasureWidthFixedValue = width;
+    rules.FixedMeasureWidthUseForPickupMeasures = false;
   }
 }
 
@@ -66,22 +93,27 @@ async function convert() {
   try {
     pyodide.globals.set('__source', source);
     pyodide.globals.set('__key', key || null);
+    pyodide.globals.set('__respect_breaks', respectBreaks.checked);
     const result = pyodide.runPython(`
 import json as _json
 _score = parse_text(__source)
 if __key:
     transpose_score(_score, __key)
-_xml = musicxml.to_musicxml(_score)
-_json.dumps({'xml': _xml, 'warnings': list(_score.warnings)})
+_xml = musicxml.to_musicxml(_score, auto_break=not __respect_breaks)
+_headers = {k: _score.headers[k] for k in ('Title','Subtitle','Subsubtitle','Composer','Poet') if k in _score.headers}
+_json.dumps({'xml': _xml, 'headers': _headers, 'warnings': list(_score.warnings)})
     `);
     const payload = JSON.parse(result);
     pyodide.globals.delete('__source');
     pyodide.globals.delete('__key');
+    pyodide.globals.delete('__respect_breaks');
 
     lastXml = payload.xml;
+    renderSheetHeader(payload.headers || {});
     const diagnostics = payload.warnings.map((w) => ({ severity: 'warning', message: w }));
     showMessages(diagnostics);
 
+    applyEngravingRules();
     await osmd.load(lastXml);
     osmd.render();
     pdfBtn.disabled = false;
@@ -99,11 +131,16 @@ function openPdf() {
   const node = document.querySelector('#score svg');
   if (!node) return;
   const svg = node.outerHTML;
+  const header = $('sheet-header').outerHTML;
   const win = window.open('', '_blank');
   if (!win) { alert('请允许弹出窗口以打开 PDF 视图'); return; }
-  win.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>歌谱</title>
-<style>@page{size:A4;margin:12mm}body{margin:0}svg{width:100%;height:auto}</style>
-</head><body>${svg}<script>window.addEventListener('load',()=>setTimeout(()=>window.print(),400))<\/script>
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Lead Sheet</title>
+<style>@page{size:A4;margin:12mm}body{margin:0;font-family:Georgia,"Songti SC",serif;color:#1f2430}
+#sheet-header{text-align:center;padding:6px 0 2px}#sheet-title:not(:empty){font-size:26px;font-weight:600}
+#sheet-subtitle:not(:empty){font-size:13px;color:#555}#sheet-composer{text-align:right;font-size:11px;min-height:14px}
+#sheet-poet{text-align:left;font-size:11px;min-height:14px;margin-top:-14px}
+svg{width:100%;height:auto}</style>
+</head><body>${header}${svg}<script>window.addEventListener('load',()=>setTimeout(()=>window.print(),400))<\/script>
 </body></html>`);
   win.document.close();
 }
@@ -125,6 +162,8 @@ function downloadXml() {
   dslInput.value = DEMO;
   convertBtn.addEventListener('click', convert);
   keySelect.addEventListener('change', convert);
+  respectBreaks.addEventListener('change', convert);
+  measureWidth.addEventListener('change', convert);
   pdfBtn.addEventListener('click', openPdf);
   downloadBtn.addEventListener('click', downloadXml);
 
@@ -135,6 +174,10 @@ function downloadXml() {
       autoResize: true,
       backend: 'svg',
       drawingParameters: 'compacttight',
+      drawTitle: false,
+      drawSubtitle: false,
+      drawComposer: false,
+      drawLyricist: false,
     });
     setStatus('就绪 · 转换在浏览器本地完成，文本不会上传', 'ready');
     convertBtn.disabled = false;

@@ -51,8 +51,16 @@ button.primary:hover:not(:disabled) { background: var(--accent-hover); }
 .messages .err { color: var(--error); white-space: pre-wrap; }
 .messages .warn { color: var(--warn); white-space: pre-wrap; }
 
-.preview { overflow: auto; align-items: center; }
+.preview { overflow: auto; align-items: stretch; }
+#sheet-header { text-align: center; font-family: Georgia, "Songti SC", serif; color: #1f2430; padding: 10px 0 4px; }
+#sheet-title:not(:empty) { font-size: 26px; font-weight: 600; line-height: 1.25; }
+#sheet-subtitle:not(:empty) { font-size: 13px; color: #555; margin-top: 2px; }
+#sheet-composer { text-align: right; font-size: 11px; min-height: 14px; }
+#sheet-poet { text-align: left; font-size: 11px; min-height: 14px; margin-top: -14px; }
 #score { width: 100%; background: #fff; }
+.layout-options { display: flex; flex-direction: column; gap: 6px; font-size: 12px; color: var(--muted); }
+.layout-options label { display: flex; align-items: center; gap: 6px; }
+.layout-options input[type="number"] { width: 64px; padding: 4px 6px; }
 footer { padding: 10px 24px 16px; color: var(--muted); font-size: 12px; text-align: center; }
 footer a { color: var(--accent); text-decoration: none; }
 

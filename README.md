@@ -48,6 +48,8 @@ On Windows you can also download the standalone `mpp.exe` from the **Nightly** r
 | `-f, --format` | `mscz` (default) \| `pdf` \| `png` \| `musicxml` \| `ly` (legacy); comma-separate for several |
 | `-o, --output` | output path (single format only) |
 | `-t, --transpose` | transpose to `KEY` (e.g. `D`, `Bb`, `F#m`); jianpu degrees stay, chord roots shift by interval |
+| `--auto-break` | let MuseScore decide system breaks instead of using DSL line breaks |
+| `--min-measure-width N` | with `--auto-break`, bars-per-line density (sp, default 8; larger = fewer bars) |
 | `--musescore` | path to `MuseScore4.exe` |
 | `--style` | MuseScore style file, defaults to `assets/jazz-lead-sheet.mss` |
 | `--no-style` | don't apply the lead-sheet style |
@@ -114,6 +116,10 @@ the **same `mpp` parser** in the browser via Pyodide (no server, no upload), ren
 result with OpenSheetMusicDisplay, and offers two actions: print/save as PDF, or download
 MusicXML (open it in MuseScore to save as `.mscz`). `web/sync_mpp.py` copies the needed
 modules from `mpp/` into `web/mpp/` at deploy time — there is only one copy of the source.
+
+Title/subtitle/poet/composer are drawn in HTML (OSMD does not render MusicXML credits),
+with a compact gap. On-page controls toggle automatic vs DSL line breaks and tune bar
+width.
 
 All three artifacts (Windows `mpp.exe`, VSCode `.vsix`, and the web page) are produced by
 **one** `nightly` workflow: daily at 20:00 Beijing time (12:00 UTC), skipped when there

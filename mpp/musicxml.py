@@ -149,7 +149,7 @@ def harmony_xml(text: str) -> str:
             f"{kind}{bass}</harmony>")
 
 
-def to_musicxml(score: Score) -> str:
+def to_musicxml(score: Score, auto_break: bool = False) -> str:
     if not score.key:
         raise ValueError("No Key: declaration found")
     if not score.time_signature:
@@ -201,25 +201,29 @@ def to_musicxml(score: Score) -> str:
       '</page-layout></defaults>')
 
     # title block
+    # MuseScore derives the title frame (VBox) height from these credit font
+    # sizes; the actual glyph sizes come from the .mss style. Smaller numbers
+    # tighten the gap between the title block and the first staff without
+    # shrinking the printed text.
     y = 1600
     subtitles = [score.headers[k] for k in ("Subtitle", "Subsubtitle") if k in score.headers]
     if "Title" in score.headers:
         A(f'<credit page="1"><credit-type>title</credit-type>'
           f'<credit-words default-x="595" default-y="{y}" justify="center" valign="top" '
-          f'font-size="22">{esc(score.headers["Title"])}</credit-words></credit>')
+          f'font-size="14">{esc(score.headers["Title"])}</credit-words></credit>')
         y -= 48
     if subtitles:
         A(f'<credit page="1"><credit-type>subtitle</credit-type>'
           f'<credit-words default-x="595" default-y="{y}" justify="center" valign="top" '
-          f'font-size="13">{esc(" · ".join(subtitles))}</credit-words></credit>')
+          f'font-size="11">{esc(" · ".join(subtitles))}</credit-words></credit>')
     if "Composer" in score.headers:
         A(f'<credit page="1"><credit-type>composer</credit-type>'
           f'<credit-words default-x="1050" default-y="1470" justify="right" valign="top" '
-          f'font-size="11">{esc(score.headers["Composer"])}</credit-words></credit>')
+          f'font-size="9">{esc(score.headers["Composer"])}</credit-words></credit>')
     if "Poet" in score.headers:
         A(f'<credit page="1"><credit-type>lyricist</credit-type>'
           f'<credit-words default-x="140" default-y="1470" justify="left" valign="top" '
-          f'font-size="11">{esc(score.headers["Poet"])}</credit-words></credit>')
+          f'font-size="9">{esc(score.headers["Poet"])}</credit-words></credit>')
 
     A('<part-list><score-part id="P1"><part-name></part-name>'
       '<score-instrument id="P1-I1"><instrument-name>Voice</instrument-name></score-instrument>'
@@ -238,9 +242,9 @@ def to_musicxml(score: Score) -> str:
         number = 0 if is_pickup else mi + 1
         attrs = ' implicit="yes"' if is_pickup else ""
         A(f'<measure number="{number}"{attrs}>')
-        if mi == 0 or pending_break or measure.break_before:
+        if not auto_break and (mi == 0 or pending_break or measure.break_before):
             A('<print new-system="yes"/>')
-            pending_break = False
+        pending_break = False
 
         measure_beats = sum((note_beats(n) for n in measure.notes), Fraction(0))
         want = pickup_expected if is_pickup else expected
