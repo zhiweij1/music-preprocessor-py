@@ -1,13 +1,10 @@
-.vscode/**
-.vscode-test/**
-.gitignore
-package-lock.json
-*.vsix
-**/*.map
-**/tsconfig.json
-**/node_modules/*/test/**
-**/node_modules/*/tests/**
-**/node_modules/*/docs/**
-**/node_modules/*/examples/**
-**/node_modules/*/README.md
-**/node_modules/*/LICENSE*
+# Whitelist: the .vsix only needs the bundled output and static assets.
+**
+**/__pycache__/**
+**/*.pyc
+!package.json
+!language-configuration.json
+!syntaxes/**
+!dist/extension.js
+!dist/lsp_server.py
+!dist/mpp/*.py

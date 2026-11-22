@@ -10,9 +10,13 @@ import os
 import sys
 
 SERVER_ROOT = os.path.dirname(os.path.abspath(__file__))
-REPO_ROOT = os.path.dirname(os.path.dirname(SERVER_ROOT))
-if REPO_ROOT not in sys.path:
-    sys.path.insert(0, REPO_ROOT)
+# Packaged layout: mpp/ is bundled next to this file (dist/mpp).
+# Repo layout: mpp/ lives two levels up (music-preprocessor-py/mpp).
+for _candidate in (SERVER_ROOT, os.path.dirname(os.path.dirname(SERVER_ROOT))):
+    if os.path.isdir(os.path.join(_candidate, "mpp")):
+        if _candidate not in sys.path:
+            sys.path.insert(0, _candidate)
+        break
 
 from mpp import musicxml                      # noqa: E402
 from mpp.diagnostics import as_diagnostic     # noqa: E402
