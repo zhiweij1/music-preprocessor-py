@@ -171,6 +171,10 @@ def tokenize(source: str) -> list:
             if tail.endswith("\r"):
                 tail = tail[:-1]
             raw += tail
+            # a % comment runs to end of line, even inside a lyric line
+            pct = raw.find("%")
+            if pct >= 0:
+                raw = raw[:pct]
             for verse, text, hanzi in split_lyric_line(raw):
                 tok = Token(T.LYRIC_HANZI if hanzi else T.LYRIC_LATIN, text, line,
                             column=start - line_start + 1)
@@ -187,6 +191,10 @@ def tokenize(source: str) -> list:
             if tail.endswith("\r"):
                 tail = tail[:-1]
             raw += tail
+            # a % comment is not part of the value
+            pct = raw.find("%")
+            if pct >= 0:
+                raw = raw[:pct]
 
         tok = classify(raw)
         tok.line = line

@@ -333,6 +333,14 @@ LP:
 % everything from the percent sign to the end of the line is a comment
 ```
 
+This also applies to lyric and header lines — text after `%` is not part of the
+lyric or the title:
+
+```text
+Title:小星星 % title comment, not part of the title
+H: 一闪一闪亮晶晶 % this note is not sung
+```
+
 ## 11. Not implemented / errors
 
 | Syntax | Status |
