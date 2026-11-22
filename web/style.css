@@ -108,6 +108,11 @@ button.primary:hover:not(:disabled) { background: var(--accent-hover); }
 #sheet-composer { text-align: right; font-size: 11px; min-height: 14px; }
 #sheet-poet { text-align: left; font-size: 11px; min-height: 14px; margin-top: -14px; }
 #score { width: 100%; background: #fff; }
+/* Verovio draws chord/lyric text without font-family; overlay MuseJazz Text. */
+#score svg g.harm text { font-family: "MuseJazz Text", Georgia, serif !important; }
+#score svg g.verse text,
+#score svg g.lyric text { font-family: "MuseJazz Text", Georgia, "Songti SC", "Microsoft YaHei", serif !important; }
+#score svg text { fill: #1f2430; }
 .layout-options { display: flex; flex-direction: column; gap: 6px; font-size: 12px; color: var(--muted); }
 .layout-options label { display: flex; align-items: center; gap: 6px; }
 .layout-options input[type="number"] { width: 64px; padding: 4px 6px; }

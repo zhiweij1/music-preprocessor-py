@@ -1,4 +1,4 @@
-/* 浏览器端胶水：Pyodide 跑 mpp 解析器，OSMD 渲染 MusicXML。无后端。 */
+/* 浏览器端胶水：Pyodide 跑 mpp 解析器，Verovio 渲染 MusicXML。无后端。 */
 const MODULES = [
   '__init__.py', 'ir.py', 'lexer.py', 'parser.py', 'lyrics.py',
   'lilypond.py', 'musicxml.py', 'transpose.py', 'diagnostics.py',
@@ -23,10 +23,9 @@ const convertBtn = $('convert-btn');
 const pdfBtn = $('pdf-btn');
 const downloadBtn = $('download-btn');
 const respectBreaks = $('respect-breaks');
-const measureWidth = $('measure-width');
 
 let pyodide = null;
-let osmd = null;
+let toolkit = null;
 let lastXml = '';
 let errorLine = 0;
 let diagTimer = null;
@@ -164,27 +163,38 @@ function renderSheetHeader(headers) {
   $('sheet-poet').textContent = headers.Poet || '';
 }
 
-function applyEngravingRules() {
-  if (!osmd) return;
-  const rules = osmd.EngravingRules;
-  rules.NewSystemAtXMLNewSystemAttribute = respectBreaks.checked;
-  // OSMD ignores MusicXML credit rendering reliably; we draw the title in HTML.
-  rules.RenderTitle = false;
-  rules.RenderSubtitle = false;
-  rules.RenderComposer = false;
-  rules.RenderLyricist = false;
-  // Jazz lead-sheet look: MuseJazz Text for chords/lyrics (the same face the
-  // MuseScore .mss style uses). Noteheads stay Gonville — VexFlow 1.2.93 has
-  // no MuseJazz/Petaluma glyph set.
-  rules.DefaultFontFamily = 'MuseJazz Text, "Songti SC", serif';
-  rules.ChordSymbolTextHeight = 2.4;
-  rules.LyricsHeight = 2.4;
-  rules.StaffLineWidth = 0.1;
-  const width = parseFloat(measureWidth.value) || 0;
-  rules.FixedMeasureWidth = width > 0;
-  if (width > 0) {
-    rules.FixedMeasureWidthFixedValue = width;
-    rules.FixedMeasureWidthUseForPickupMeasures = false;
+function applyVerovioOptions() {
+  if (!toolkit) return;
+  // 手写 jazz 风格：Petaluma 音乐字形（谱号/符头/休止符/拍号）；
+  // 文本（和弦/歌词/小节号）由页面 CSS 覆盖为 MuseJazz Text。
+  toolkit.setOptions({
+    font: 'Petaluma',
+    scale: 40,
+    pageWidth: 2100,
+    pageHeight: 2970,
+    adjustPageHeight: true,
+    footer: 'none',
+    header: 'none',
+    // 勾选「按 DSL 换行」时尊重源文件换行（MusicXML 里的 new-system），
+    // 否则交给 Verovio 按页宽自动排版。
+    breaks: respectBreaks.checked ? 'none' : 'auto',
+  });
+}
+
+// Verovio WASM initializes asynchronously; poll until its toolkit is usable.
+async function initVerovio(timeoutMs = 30000) {
+  const start = Date.now();
+  for (;;) {
+    try {
+      const tk = new verovio.toolkit();
+      tk.getVersion();
+      return tk;
+    } catch (e) {
+      if (Date.now() - start > timeoutMs) {
+        throw new Error('Verovio runtime not ready: ' + (e.message || e));
+      }
+      await new Promise((r) => setTimeout(r, 100));
+    }
   }
 }
 
@@ -206,7 +216,7 @@ from mpp.transpose import transpose_score
 }
 
 async function convert() {
-  if (!pyodide || !osmd) return;
+  if (!pyodide || !toolkit) return;
   const source = dslInput.value;
   const key = keySelect.value;
   showMessages([]);
@@ -233,9 +243,11 @@ _json.dumps({'xml': _xml, 'headers': _headers, 'warnings': list(_score.warnings)
     const diagnostics = payload.warnings.map((w) => ({ severity: 'warning', message: w }));
     showMessages(diagnostics);
 
-    applyEngravingRules();
-    await osmd.load(lastXml);
-    osmd.render();
+    applyVerovioOptions();
+    if (!toolkit.loadData(lastXml)) throw new Error('MusicXML load failed');
+    const svg = toolkit.renderToSVG(1);
+    if (!svg) throw new Error('render failed: ' + toolkit.getLog());
+    $('score').innerHTML = svg;
     pdfBtn.disabled = false;
     downloadBtn.disabled = false;
     if (errorLine) { errorLine = 0; renderHighlight(); }
@@ -296,27 +308,19 @@ function downloadXml() {
   convertBtn.addEventListener('click', convert);
   keySelect.addEventListener('change', convert);
   respectBreaks.addEventListener('change', convert);
-  measureWidth.addEventListener('change', convert);
   pdfBtn.addEventListener('click', openPdf);
   downloadBtn.addEventListener('click', downloadXml);
 
-  // Make sure the chord/lyric face is ready before OSMD draws text.
+  // Make sure the chord/lyric face is ready before Verovio draws text.
   if (document.fonts && document.fonts.load) {
     try { await document.fonts.load('16px "MuseJazz Text"'); } catch (_) { /* serif fallback */ }
   }
 
   try {
+    setStatus('正在加载渲染引擎（Verovio WASM）…', 'loading');
+    toolkit = await initVerovio();
     setStatus('正在加载转换引擎（Pyodide）…', 'loading');
     await initPyodide();
-    osmd = new opensheetmusicdisplay.OpenSheetMusicDisplay('score', {
-      autoResize: true,
-      backend: 'svg',
-      drawingParameters: 'compacttight',
-      drawTitle: false,
-      drawSubtitle: false,
-      drawComposer: false,
-      drawLyricist: false,
-    });
     setStatus('就绪 · 转换在浏览器本地完成，文本不会上传', 'ready');
     convertBtn.disabled = false;
     pdfBtn.disabled = false;

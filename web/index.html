@@ -6,7 +6,7 @@
   <title>Lead Sheet（简谱 DSL 在线生成）</title>
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/opensheetmusicdisplay@1.8.7/build/opensheetmusicdisplay.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/verovio@6.4.1/dist/verovio-toolkit-wasm.js"></script>
 </head>
 <body>
   <header>
@@ -44,7 +44,6 @@
       </div>
       <div class="layout-options">
         <label><input type="checkbox" id="respect-breaks"> 按 DSL 换行（默认由浏览器自动排版）</label>
-        <label>小节宽度 <input type="number" id="measure-width" min="4" max="40" step="1" value="0" title="0=自动；越大每行小节越少"></label>
       </div>
       <button id="convert-btn" class="primary" disabled>生成谱面</button>
       <div class="actions">
@@ -66,7 +65,7 @@
   </main>
 
   <footer>
-    谱面由 <a href="https://opensheetmusicdisplay.org/" target="_blank" rel="noopener">OpenSheetMusicDisplay</a> 渲染
+    谱面由 <a href="https://www.verovio.org/" target="_blank" rel="noopener">Verovio</a> 渲染
   </footer>
 
   <script src="app.js"></script>
