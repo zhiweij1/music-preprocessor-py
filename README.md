@@ -124,11 +124,9 @@ with a compact gap. On-page controls toggle automatic vs DSL line breaks and tun
 width.
 
 All three artifacts (Windows `mpp.exe`, VSCode `.vsix`, and the web page) are produced by
-**one** `nightly` workflow: scheduled daily at 20:00 Beijing time (12:00 UTC), skipped
-when there are no new commits, and the page is deployed only after the release is
-published. Note: GitHub schedules are best-effort and can fire hours late under load —
-the cron time is a target, not a guarantee. Enable Pages once: repository Settings →
-Pages → Source = GitHub Actions.
+**one** `nightly` workflow: daily at 20:00 Beijing time (12:00 UTC), skipped when there
+are no new commits, and the page is deployed only after the release is published. Enable
+Pages once: repository Settings → Pages → Source = GitHub Actions.
 
 ## Typography
 

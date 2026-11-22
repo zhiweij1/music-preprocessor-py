@@ -116,9 +116,8 @@ npx vsce package
 页面上的「按 DSL 换行」开关可切换自动排版与按源文件换行，「小节宽度」可调每行松紧。
 
 三个产物（Windows `mpp.exe`、VSCode `.vsix`、网页）由**同一个** `nightly` 工作流产出：
-计划每天北京时间 20:00（UTC 12:00）触发，没有新 commit 就跳过，网页只在 release 发布后
-才部署。注意：GitHub 的定时任务只是"尽量执行"，高峰时可能延迟数小时，cron 时间是目标
-而非保证。启用方式：仓库 Settings → Pages → Source 选 GitHub Actions。
+每天北京时间 20:00（UTC 12:00）触发，没有新 commit 就跳过，网页只在 release 发布后
+才部署。启用方式：仓库 Settings → Pages → Source 选 GitHub Actions。
 
 ## 版式
 
