@@ -126,7 +126,9 @@ modules from `mpp/` into `web/mpp/` at deploy time — there is only one copy of
 Title/subtitle/poet/composer are drawn in HTML (OSMD does not render MusicXML credits),
 with a compact gap. On-page controls toggle automatic vs DSL line breaks and tune bar
 width. The DSL editor highlights syntax and reports errors live (same parser, with
-line/column and did-you-mean).
+line/column and did-you-mean). Chords and lyrics use the **MuseJazz Text** face
+(bundled in `web/fonts/` under the SIL OFL, see `OFL.txt`) to match the MuseScore
+lead-sheet style; noteheads stay on VexFlow's Gonville, which has no jazz glyph set.
 
 All three artifacts (Windows `mpp.exe`, VSCode `.vsix`, and the web page) are produced by
 **one** `nightly` workflow: daily at 20:00 Beijing time (12:00 UTC), skipped when there

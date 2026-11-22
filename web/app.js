@@ -173,6 +173,13 @@ function applyEngravingRules() {
   rules.RenderSubtitle = false;
   rules.RenderComposer = false;
   rules.RenderLyricist = false;
+  // Jazz lead-sheet look: MuseJazz Text for chords/lyrics (the same face the
+  // MuseScore .mss style uses). Noteheads stay Gonville — VexFlow 1.2.93 has
+  // no MuseJazz/Petaluma glyph set.
+  rules.DefaultFontFamily = 'MuseJazz Text, "Songti SC", serif';
+  rules.ChordSymbolTextHeight = 2.4;
+  rules.LyricsHeight = 2.4;
+  rules.StaffLineWidth = 0.1;
   const width = parseFloat(measureWidth.value) || 0;
   rules.FixedMeasureWidth = width > 0;
   if (width > 0) {
@@ -252,8 +259,10 @@ function openPdf() {
   const header = $('sheet-header').outerHTML;
   const win = window.open('', '_blank');
   if (!win) { alert('请允许弹出窗口以打开 PDF 视图'); return; }
+  const fontUrl = new URL('fonts/MuseJazzText.otf', location.href).href;
   win.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Lead Sheet</title>
-<style>@page{size:A4;margin:12mm}body{margin:0;font-family:Georgia,"Songti SC",serif;color:#1f2430}
+<style>@font-face{font-family:"MuseJazz Text";src:url("${fontUrl}") format("opentype");font-display:swap}
+@page{size:A4;margin:12mm}body{margin:0;font-family:"MuseJazz Text",Georgia,"Songti SC",serif;color:#1f2430}
 #sheet-header{text-align:center;padding:6px 0 2px}#sheet-title:not(:empty){font-size:26px;font-weight:600}
 #sheet-subtitle:not(:empty){font-size:13px;color:#555}#sheet-composer{text-align:right;font-size:11px;min-height:14px}
 #sheet-poet{text-align:left;font-size:11px;min-height:14px;margin-top:-14px}
@@ -290,6 +299,11 @@ function downloadXml() {
   measureWidth.addEventListener('change', convert);
   pdfBtn.addEventListener('click', openPdf);
   downloadBtn.addEventListener('click', downloadXml);
+
+  // Make sure the chord/lyric face is ready before OSMD draws text.
+  if (document.fonts && document.fonts.load) {
+    try { await document.fonts.load('16px "MuseJazz Text"'); } catch (_) { /* serif fallback */ }
+  }
 
   try {
     setStatus('正在加载转换引擎（Pyodide）…', 'loading');

@@ -118,6 +118,8 @@ npx vsce package     # 会自动执行 npm run build（esbuild 打包）
 标题/副标题/词曲由页面用 HTML 绘制（OSMD 不渲染 MusicXML 的 credit），距离紧凑；
 页面上的「按 DSL 换行」开关可切换自动排版与按源文件换行，「小节宽度」可调每行松紧。
 DSL 编辑器带语法高亮和实时报错（同一套解析器，出行列号和 did-you-mean）。
+和弦和歌词使用 **MuseJazz Text** 字体（随附在 `web/fonts/`，SIL OFL 许可，见 `OFL.txt`），
+以贴近 MuseScore 的 lead sheet 观感；音符符头仍是 VexFlow 的 Gonville（它没有爵士字形）。
 
 三个产物（Windows `mpp.exe`、VSCode `.vsix`、网页）由**同一个** `nightly` 工作流产出：
 每天北京时间 20:00（UTC 12:00）触发，没有新 commit 就跳过，网页只在 release 发布后
